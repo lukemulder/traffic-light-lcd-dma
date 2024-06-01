@@ -42,48 +42,54 @@
 #define LOGGING_ENABLED 1
 
 typedef enum {
-  ERROR = 0,
+  NONE = 0,
+  ERROR,
   WARNING,
   INFO,
-  NONE,
   MAX_LOG_LEVEL
 } LogLevel_e;
 
-typedef enum {
-  HAL_LCD = 0,
-  HAL_SPI,
-  HAL_PWM,
-  HAL_GPIO,
-  DRV_LCD,
-  DRV_GUI,
-  MAIN,
-  MAX_LOG_MODULE
-} LogModule_e;
-
-typedef struct {
-  LogLevel_e level;
-  LogModule_e module;
-  char module_name[10];
-} LogConfig_t;
-
-const static LogConfig_t logTable[MAX_LOG_MODULE] = {
-    {INFO, HAL_LCD,  "HAL_LCD"},
-    {INFO, HAL_SPI,  "HAL_SPI"},
-    {INFO, HAL_PWM,  "HAL_PWM"},
-    {INFO, HAL_GPIO, "HAL_GPIO"},
-    {INFO, DRV_LCD,  "DRV_LCD"},
-    {INFO, DRV_GUI,  "DRV_GUI"},
-    {INFO, MAIN,     "MAIN"}
+const static char logLevelTable[MAX_LOG_LEVEL][10] = {
+  {"NONE"},
+  {"ERROR"},
+  {"WARNING"},
+  {"INFO"}
 };
 
-// Static assert to ensure the logTable size matches the number of LogModule_e entries (minus 1 for MAX_LOG_MODULE)
-_Static_assert((sizeof(logTable) / sizeof(logTable[0])) == (MAX_LOG_MODULE), "Number of logTable entries does not match number of LogModule_e entries");
+// LOG LEVELS
+// Place these levels in your c file to specify the log level you wish to set
+// (From least to most verbose)
+// #define LOG_LEVEL_NONE
+// #define LOG_LEVEL_ERROR
+// #define LOG_LEVEL_WARNING
+// #define LOG_LEVEL_INFO
 
-void logging(const char *file, int line, const char *func, LogModule_e module, const char *log_str, ...) {
+#define LOG_LEVEL_SETTING_NONE    0
+#define LOG_LEVEL_SETTING_ERROR   1
+#define LOG_LEVEL_SETTING_WARNING 2
+#define LOG_LEVEL_SETTING_INFO    3
+
+#ifdef LOG_LEVEL_NONE
+  #define LOG_LEVEL LOG_LEVEL_SETTING_NONE
+#endif
+#ifdef LOG_LEVEL_ERROR
+  #define LOG_LEVEL LOG_LEVEL_SETTING_ERROR
+#endif
+#ifdef LOG_LEVEL_WARNING
+  #define LOG_LEVEL LOG_LEVEL_SETTING_WARNING
+#endif
+#ifdef LOG_LEVEL_INFO
+  #define LOG_LEVEL LOG_LEVEL_SETTING_INFO
+#endif
+
+void logging(const char *file, int line, const char *func, LogLevel_e level, const char *log_str, ...) {
+
     va_list args;
     va_start(args, log_str);
 
-    printf("[%s] %s:%d %s() - ", logTable[module].module_name, file, line, func);
+    if(level == INFO)
+      printf("[%s] %s:%d %s() - ", logLevelTable[level], file, line, func);
+    
     vprintf(log_str, args);
     va_end(args);
 
@@ -91,9 +97,27 @@ void logging(const char *file, int line, const char *func, LogModule_e module, c
 }
 
 #ifdef LOGGING_ENABLED
-  #define LOG(module, log_str, ...) logging(__FILE__, __LINE__, __func__, module, log_str, ##__VA_ARGS__)
+  #if LOG_LEVEL >= LOG_LEVEL_SETTING_ERROR
+    #define LOG_ERR(log_str, ...) logging(__FILE__, __LINE__, __func__, ERROR, log_str, ##__VA_ARGS__)
+  #else
+    #define LOG_ERR(log_str, ...)
+  #endif
+
+  #if LOG_LEVEL >= LOG_LEVEL_SETTING_WARNING
+    #define LOG_WARN(log_str, ...) logging(__FILE__, __LINE__, __func__, WARNING, log_str, ##__VA_ARGS__)
+  #else
+    #define LOG_WARN(log_str, ...)
+  #endif
+
+  #if LOG_INFO >= LOG_LEVEL_SETTING_INFO
+    #define LOG_INFO(log_str, ...) logging(__FILE__, __LINE__, __func__, INFO, log_str, ##__VA_ARGS__)
+  #else
+    #define LOG_INFO(log_str, ...)
+  #endif
 #else // LOGGING_ENABLED
-  #define LOG(module, log_str, ...)
+  #define LOG_ERR(log_str, ...)
+  #define LOG_WARN(log_str, ...)
+  #define LOG_INFO(log_str, ...)
 #endif // LOGGING_ENABLED
 
 #endif // _LOGGING_H_

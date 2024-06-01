@@ -6,7 +6,6 @@
 #include "GUI_Paint.h"
 #include "image.h"
 #include "animation.h"
-#include "esp_log.h"
 #include "driver/uart.h"
 
 void app_main(void)

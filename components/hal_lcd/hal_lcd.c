@@ -407,7 +407,11 @@ parameter	:
 ******************************************************************************/
 void Hal_LCD_DrawImage(const void* img, uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend)
 {
-    if(Xstart > Xend || Ystart > Yend || img == NULL) { return; }
+    if(Xstart > Xend || Ystart > Yend || img == NULL)
+    {
+        
+        return; 
+    }
 
     int img_size = (Xstart - Xend) * (Ystart - Yend) * 2;
 
