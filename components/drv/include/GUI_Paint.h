@@ -35,7 +35,7 @@
 #define __GUI_PAINT_H
 
 #include "fonts.h"
-#include "log.h"
+#include "logging.h"
 
 /**
  * Image attributes

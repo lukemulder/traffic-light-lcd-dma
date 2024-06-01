@@ -115,10 +115,10 @@ void Paint_NewImage(uint16_t Width, uint16_t Height, uint16_t Rotate, uint16_t C
 void Paint_SetRotate(uint16_t Rotate)
 {
   if (Rotate == ROTATE_0 || Rotate == ROTATE_90 || Rotate == ROTATE_180 || Rotate == ROTATE_270) {
-    //Debug("Set image Rotate %d\r\n", Rotate);
+    //LOG(DRV_GUI, "Set image Rotate %d\r\n", Rotate);
     Paint.Rotate = Rotate;
   } else {
-    //Debug("rotate = 0, 90, 180, 270\r\n");
+    //LOG(DRV_GUI, "rotate = 0, 90, 180, 270\r\n");
     //  exit(0);
   }
 }
@@ -132,10 +132,10 @@ void Paint_SetMirroring(uint8_t mirror)
 {
   if (mirror == MIRROR_NONE || mirror == MIRROR_HORIZONTAL ||
       mirror == MIRROR_VERTICAL || mirror == MIRROR_ORIGIN) {
-    //Debug("mirror image x:%s, y:%s\r\n", (mirror & 0x01) ? "mirror" : "none", ((mirror >> 1) & 0x01) ? "mirror" : "none");
+    //LOG(DRV_GUI, "mirror image x:%s, y:%s\r\n", (mirror & 0x01) ? "mirror" : "none", ((mirror >> 1) & 0x01) ? "mirror" : "none");
     Paint.Mirror = mirror;
   } else {
-    //Debug("mirror should be MIRROR_NONE, MIRROR_HORIZONTAL, MIRROR_VERTICAL or MIRROR_ORIGIN\r\n");
+    //LOG(DRV_GUI, "mirror should be MIRROR_NONE, MIRROR_HORIZONTAL, MIRROR_VERTICAL or MIRROR_ORIGIN\r\n");
     //exit(0);
   }
 }
@@ -150,7 +150,7 @@ void Paint_SetMirroring(uint8_t mirror)
 void Paint_SetPixel(uint16_t Xpoint, uint16_t Ypoint, uint16_t Color)
 {
   if (Xpoint > Paint.Width || Ypoint > Paint.Height) {
-    //Debug("Exceeding display boundaries\r\n");
+    //LOG(DRV_GUI, "Exceeding display boundaries\r\n");
     return;
   }
   uint16_t X, Y;
@@ -196,7 +196,7 @@ void Paint_SetPixel(uint16_t Xpoint, uint16_t Ypoint, uint16_t Color)
 
   // printf("x = %d, y = %d\r\n", X, Y);
   if (X > Paint.WidthMemory || Y > Paint.HeightMemory) {
-    //Debug("Exceeding display boundaries\r\n");
+    //LOG(DRV_GUI, "Exceeding display boundaries\r\n");
     return;
   }
 
@@ -239,7 +239,7 @@ void Paint_DrawPoint( uint16_t Xpoint,       uint16_t Ypoint, uint16_t Color,
                       DOT_PIXEL Dot_Pixel,DOT_STYLE Dot_FillWay)
 {
     if (Xpoint > Paint.Width || Ypoint > Paint.Height) {
-        Debug("Paint_DrawPoint Input exceeds the normal display range\r\n");
+        LOG(DRV_GUI, "Paint_DrawPoint Input exceeds the normal display range\r\n");
         return;
     }
 
@@ -247,7 +247,7 @@ void Paint_DrawPoint( uint16_t Xpoint,       uint16_t Ypoint, uint16_t Color,
     if (Dot_FillWay == DOT_FILL_AROUND) {
         for (XDir_Num = 0; XDir_Num < 2*Dot_Pixel - 1; XDir_Num++) {
             for (YDir_Num = 0; YDir_Num < 2 * Dot_Pixel - 1; YDir_Num++) {
-                if(Xpoint + XDir_Num - Dot_Pixel < 0 || Ypoint + YDir_Num - Dot_Pixel < 0)
+                if(Xpoint + XDir_Num < Dot_Pixel || Ypoint + YDir_Num < Dot_Pixel)
                     break;
                 // printf("x = %d, y = %d\r\n", Xpoint + XDir_Num - Dot_Pixel, Ypoint + YDir_Num - Dot_Pixel);
                 Paint_SetPixel(Xpoint + XDir_Num - Dot_Pixel, Ypoint + YDir_Num - Dot_Pixel, Color);
@@ -276,7 +276,7 @@ void Paint_DrawLine(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Ye
 {
     if (Xstart > Paint.Width || Ystart > Paint.Height ||
         Xend > Paint.Width || Yend > Paint.Height) {
-        Debug("Paint_DrawLine Input exceeds the normal display range\r\n");
+        LOG(DRV_GUI, "Paint_DrawLine Input exceeds the normal display range\r\n");
         return;
     }
 
@@ -297,7 +297,7 @@ void Paint_DrawLine(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Ye
         Dotted_Len++;
         //Painted dotted line, 2 point is really virtual
         if (Line_Style == LINE_STYLE_DOTTED && Dotted_Len % 3 == 0) {
-            //Debug("LINE_DOTTED\r\n");
+            //LOG(DRV_GUI, "LINE_DOTTED\r\n");
             Paint_DrawPoint(Xpoint, Ypoint, IMAGE_BACKGROUND, Line_width, DOT_STYLE_DFT);
             Dotted_Len = 0;
         } else {
@@ -333,7 +333,7 @@ void Paint_DrawRectangle( uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint1
 {
     if (Xstart > Paint.Width || Ystart > Paint.Height ||
         Xend > Paint.Width || Yend > Paint.Height) {
-        Debug("Input exceeds the normal display range\r\n");
+        LOG(DRV_GUI, "Input exceeds the normal display range\r\n");
         return;
     }
 
@@ -364,7 +364,7 @@ void Paint_DrawCircle(  uint16_t X_Center, uint16_t Y_Center, uint16_t Radius,
                         uint16_t Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill )
 {
     if (X_Center > Paint.Width || Y_Center >= Paint.Height) {
-        Debug("Paint_DrawCircle Input exceeds the normal display range\r\n");
+        LOG(DRV_GUI, "Paint_DrawCircle Input exceeds the normal display range\r\n");
         return;
     }
 
@@ -436,7 +436,7 @@ void Paint_DrawChar(uint16_t Xpoint, uint16_t Ypoint, const char Acsii_Char,
   uint16_t Page, Column;
 
   if (Xpoint > Paint.Width || Ypoint > Paint.Height) {
-    //Debug("Paint_DrawChar Input exceeds the normal display range\r\n");
+    //LOG(DRV_GUI, "Paint_DrawChar Input exceeds the normal display range\r\n");
     return;
   }
   uint32_t Char_Offset = (Acsii_Char - ' ') * Font->Height * (Font->Width / 8 + (Font->Width % 8 ? 1 : 0));
@@ -484,7 +484,7 @@ void Paint_DrawString_EN(uint16_t Xstart, uint16_t Ystart, const char * pString,
   uint16_t Ypoint = Ystart;
 
   if (Xstart > Paint.Width || Ystart > Paint.Height) {
-    //Debug("Paint_DrawString_EN Input exceeds the normal display range\r\n");
+    //LOG(DRV_GUI, "Paint_DrawString_EN Input exceeds the normal display range\r\n");
     return;
   }
 
@@ -605,7 +605,7 @@ void Paint_DrawNum(uint16_t Xpoint, uint16_t Ypoint, int32_t Number,
   uint8_t *pStr = Str_Array;
 
   if (Xpoint > Paint.Width || Ypoint > Paint.Height) {
-    //Debug("Paint_DisNum Input exceeds the normal display range\r\n");
+    //LOG(DRV_GUI, "Paint_DisNum Input exceeds the normal display range\r\n");
     return;
   }
 

@@ -32,12 +32,14 @@
 *   - Extended configuration options for runtime adjustments.
 *
 ******************************************************************************/
-#ifndef _LOG_H_
-#define _LOG_H_
+#ifndef _LOGGING_H_
+#define _LOGGING_H_
 
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+
+#define LOGGING_ENABLED 1
 
 typedef enum {
   ERROR = 0,
@@ -53,6 +55,7 @@ typedef enum {
   HAL_PWM,
   HAL_GPIO,
   DRV_LCD,
+  DRV_GUI,
   MAIN,
   MAX_LOG_MODULE
 } LogModule_e;
@@ -69,23 +72,27 @@ const static LogConfig_t logTable[MAX_LOG_MODULE] = {
     {INFO, HAL_PWM, "HAL_PWM"},
     {NONE, HAL_GPIO, "HAL_GPIO"},
     {ERROR, DRV_LCD, "DRV_LCD"},
+    {INFO, DRV_GUI, "DRV_GUI"},
     {INFO, MAIN, "MAIN"}
 };
 
 // Static assert to ensure the logTable size matches the number of LogModule_e entries (minus 1 for MAX_LOG_MODULE)
 _Static_assert((sizeof(logTable) / sizeof(logTable[0])) == (MAX_LOG_MODULE), "Number of logTable entries does not match number of LogModule_e entries");
 
-void LOG(LogModule_e module, const char *format, ...) {
+void logging(const char *file, int line, const char *func, LogModule_e module, const char *log_str, ...) {
     va_list args;
-    va_start(args, format);
+    va_start(args, log_str);
 
-    // Print module name or other info before the actual message
-    printf("[%s] ", logTable[module].module_name);
-
-    vprintf(format, args);
+    printf("[%s] %s:%d %s() - ", logTable[module].module_name, file, line, func);
+    vprintf(log_str, args);
     va_end(args);
-
     printf("\n");
 }
 
-#endif // _LOG_H_
+#ifdef LOGGING_ENABLED
+  #define LOG(module, log_str, ...) logging(__FILE__, __LINE__, __func__, module, log_str, ##__VA_ARGS__)
+#else // LOGGING_ENABLED
+  #define LOG(module, log_str, ...)
+#endif // LOGGING_ENABLED
+
+#endif // _LOGGING_H_
