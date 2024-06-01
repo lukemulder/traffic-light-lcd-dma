@@ -67,13 +67,13 @@ typedef struct {
 } LogConfig_t;
 
 const static LogConfig_t logTable[MAX_LOG_MODULE] = {
-    {ERROR, HAL_LCD, "HAL_LCD"},
-    {WARNING, HAL_SPI, "HAL_SPI"},
-    {INFO, HAL_PWM, "HAL_PWM"},
-    {NONE, HAL_GPIO, "HAL_GPIO"},
-    {ERROR, DRV_LCD, "DRV_LCD"},
-    {INFO, DRV_GUI, "DRV_GUI"},
-    {INFO, MAIN, "MAIN"}
+    {INFO, HAL_LCD,  "HAL_LCD"},
+    {INFO, HAL_SPI,  "HAL_SPI"},
+    {INFO, HAL_PWM,  "HAL_PWM"},
+    {INFO, HAL_GPIO, "HAL_GPIO"},
+    {INFO, DRV_LCD,  "DRV_LCD"},
+    {INFO, DRV_GUI,  "DRV_GUI"},
+    {INFO, MAIN,     "MAIN"}
 };
 
 // Static assert to ensure the logTable size matches the number of LogModule_e entries (minus 1 for MAX_LOG_MODULE)
@@ -86,6 +86,7 @@ void logging(const char *file, int line, const char *func, LogModule_e module, c
     printf("[%s] %s:%d %s() - ", logTable[module].module_name, file, line, func);
     vprintf(log_str, args);
     va_end(args);
+
     printf("\n");
 }
 
