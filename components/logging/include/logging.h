@@ -1,5 +1,5 @@
 /*****************************************************************************
-* | File        : log.h
+* | File        : logging.h
 * | Author      : Luke Mulder
 * | Function    : Debug utilities for logging system events
 * | Info        :
@@ -19,7 +19,7 @@
 *   and production builds, with adjustable log levels and output formats.
 *----------------
 * | This version:   V1.0
-* | Date        :   2023-05-24
+* | Date        :   2024-05-24
 * | Info        :   Basic version
 *   - Initial release includes basic logging functions.
 *   - Supports variable argument lists similar to printf for formatted output.
@@ -49,12 +49,11 @@ typedef enum {
   MAX_LOG_LEVEL
 } LogLevel_e;
 
-const static char logLevelTable[MAX_LOG_LEVEL][10] = {
-  {"NONE"},
-  {"ERROR"},
-  {"WARNING"},
-  {"INFO"}
-};
+// Define string representations for log levels
+#define NONE_STR    "NONE"
+#define ERROR_STR   "ERROR"
+#define WARNING_STR "WARNING"
+#define INFO_STR    "INFO"
 
 // LOG LEVELS
 // Place these levels in your c file to specify the log level you wish to set
@@ -82,31 +81,19 @@ const static char logLevelTable[MAX_LOG_LEVEL][10] = {
   #define LOG_LEVEL LOG_LEVEL_SETTING_INFO
 #endif
 
-void logging(const char *file, int line, const char *func, LogLevel_e level, const char *log_str, ...) {
-
-    va_list args;
-    va_start(args, log_str);
-
-    if(level == INFO)
-      printf("[%s] %s:%d %s() - ", logLevelTable[level], file, line, func);
-    
-    vprintf(log_str, args);
-    va_end(args);
-
-    printf("\n");
-}
+void logging(const char *file, int line, const char *func, LogLevel_e level, const char *log_str, ...);
 
 #ifdef LOGGING_ENABLED
   #if LOG_LEVEL >= LOG_LEVEL_SETTING_ERROR
-    #define LOG_ERR(log_str, ...) logging(__FILE__, __LINE__, __func__, ERROR, log_str, ##__VA_ARGS__)
+    #define LOG_ERROR(log_str, ...) logging(__FILE__, __LINE__, __func__, ERROR, log_str, ##__VA_ARGS__)
   #else
-    #define LOG_ERR(log_str, ...)
+    #define LOG_ERROR(log_str, ...)
   #endif
 
   #if LOG_LEVEL >= LOG_LEVEL_SETTING_WARNING
-    #define LOG_WARN(log_str, ...) logging(__FILE__, __LINE__, __func__, WARNING, log_str, ##__VA_ARGS__)
+    #define LOG_WARNING(log_str, ...) logging(__FILE__, __LINE__, __func__, WARNING, log_str, ##__VA_ARGS__)
   #else
-    #define LOG_WARN(log_str, ...)
+    #define LOG_WARNING(log_str, ...)
   #endif
 
   #if LOG_INFO >= LOG_LEVEL_SETTING_INFO
@@ -115,8 +102,8 @@ void logging(const char *file, int line, const char *func, LogLevel_e level, con
     #define LOG_INFO(log_str, ...)
   #endif
 #else // LOGGING_ENABLED
-  #define LOG_ERR(log_str, ...)
-  #define LOG_WARN(log_str, ...)
+  #define LOG_ERROR(log_str, ...)
+  #define LOG_WARNING(log_str, ...)
   #define LOG_INFO(log_str, ...)
 #endif // LOGGING_ENABLED
 

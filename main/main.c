@@ -1,25 +1,24 @@
-#include <stdio.h>
+/*****************************************************************************
+* | File        : main.c
+* | Author      : Luke Mulder
+* | Function    : Traffic Light Control
+* | Info        :
+*   Implements a traffic light with a finite state machine and displays it to
+*   an LCD diaply.
+******************************************************************************/
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_system.h"
 #include "hal_lcd.h"
 #include "GUI_Paint.h"
 #include "image.h"
 #include "animation.h"
-#include "driver/uart.h"
 
 void app_main(void)
 {
-
-  //runLengthEncode((uint8_t*)frame_00_delay_0_06s, 169*240*2);
   Hal_LCD_Init();
   delay_ms(5000);
-  //LCD_Clear(WHITE);
-  //LCD_Clear(RED);
-  //LCD_Clear(GREEN);
   Hal_LCD_Clear(BLACK);
-  //Hal_LCD_DrawPoint(1, 1, WHITE);
-
   delay_ms(5000);
   Hal_LCD_Clear(WHITE);
   delay_ms(2000);

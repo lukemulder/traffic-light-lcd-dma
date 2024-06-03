@@ -30,6 +30,9 @@
 #
 ******************************************************************************/
 
+#define LOG_LEVEL_ERROR
+
+#include "logging.h"
 #include "hal_spi.h"
 #include <string.h>
 
@@ -66,8 +69,12 @@ void Hal_SPI_Init(Hal_SPI_Config_t *cfg, Hal_SPI_Handle_t *h)
 HAL_ERR_T Hal_SPI_Transmit(Hal_SPI_Handle_t *h, uint8_t dat)
 {
     if(h == NULL)
+    {
+        LOG_ERROR("SPI Handle NULL");
         return ESP_FAIL;
+    }
 
+    HAL_ERR_T e;
     spi_transaction_t t;
 
     //printf("%02X ", dat);
@@ -76,7 +83,14 @@ HAL_ERR_T Hal_SPI_Transmit(Hal_SPI_Handle_t *h, uint8_t dat)
     t.length = 8;
     t.tx_buffer = &dat;
 
-    return spi_device_transmit(h->handle, &t);
+    e = spi_device_transmit(h->handle, &t);
+
+    if(e != ESP_OK)
+    {
+        LOG_ERROR("spi_device_transmit failed");
+    }
+
+    return e;
 }
 
 /**
@@ -85,8 +99,12 @@ HAL_ERR_T Hal_SPI_Transmit(Hal_SPI_Handle_t *h, uint8_t dat)
 HAL_ERR_T Hal_SPI_Transmit_Buffer(Hal_SPI_Handle_t *h, const uint8_t *data, int size)
 {
     if(h == NULL || data == NULL || size <= 0 || size > HAL_SPI_MAX_TRANSFER_SIZE)
+    {
+        LOG_ERROR("Incorrect inputs");
         return ESP_FAIL;
+    }
 
+    HAL_ERR_T e;
     spi_transaction_t t;
 /*
     for(int i = 0; i < size; i++)
@@ -98,5 +116,12 @@ HAL_ERR_T Hal_SPI_Transmit_Buffer(Hal_SPI_Handle_t *h, const uint8_t *data, int 
     t.length = size * 8;
     t.tx_buffer = data;
 
-    return spi_device_transmit(h->handle, &t);
+    e = spi_device_transmit(h->handle, &t);
+
+    if(e != ESP_OK)
+    {
+        LOG_ERROR("spi_device_transmit failed");
+    }
+
+    return e;
 }

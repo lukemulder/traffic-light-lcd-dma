@@ -28,6 +28,10 @@
 #
 ******************************************************************************/
 
+#define LOG_LEVEL_ERROR
+
+#include "logging.h"
+
 #include "hal_lcd.h"
 #include "hal_lcd_types.h"
 
@@ -51,7 +55,7 @@ static void HAL_LCD_GPIO_Init()
 
 /*******************************************************************************
 function:
-	LCD Hardware Reset
+    LCD Hardware Reset
 *******************************************************************************/
 static void Hal_LCD_SPI_Init(void)
 {
@@ -70,10 +74,12 @@ static void Hal_LCD_SPI_Init(void)
 
 /*******************************************************************************
 function:
-	LCD Hardware Reset
+    LCD Hardware Reset
 *******************************************************************************/
 static void Hal_LCD_Reset(void)
 {
+    LOG_INFO("Resetting LCD");
+
     GPIO_DIGITAL_WRITE(LCD_RST_PIN, LCD_RST_PIN_ENABLE);
     delay_ms(1);  // Apply reset pulse longer than 10 microseconds
     GPIO_DIGITAL_WRITE(LCD_RST_PIN, LCD_RST_PIN_DISABLE);
@@ -84,13 +90,23 @@ static void Hal_LCD_Reset(void)
 
 /*******************************************************************************
 function: 
-	Write command and associated data
+    Write command and associated data
 *******************************************************************************/
 static void Hal_LCD_Data_Write(const void *data, int data_len)	 
 {
-    if(data == NULL || data_len <= 0) { return; }
+    if(data == NULL)
+    {
+        LOG_ERROR("Input: data pointer null");
+        return;
+    }
 
-	GPIO_DIGITAL_WRITE(LCD_CS_PIN, LCD_CS_PIN_ENABLE);
+    if(data_len <= 0)
+    {
+        LOG_ERROR("Input: data length must be greater than 0");
+        return;
+    }
+
+    GPIO_DIGITAL_WRITE(LCD_CS_PIN, LCD_CS_PIN_ENABLE);
     GPIO_DIGITAL_WRITE(LCD_DC_PIN, LCD_DC_PIN_DATA);
 
     int num_transactions = (data_len + HAL_SPI_MAX_TRANSFER_SIZE - 1) / HAL_SPI_MAX_TRANSFER_SIZE;
@@ -106,12 +122,12 @@ static void Hal_LCD_Data_Write(const void *data, int data_len)
         offset += t_len;
     }
     
-	GPIO_DIGITAL_WRITE(LCD_CS_PIN, LCD_CS_PIN_DISABLE);
+    GPIO_DIGITAL_WRITE(LCD_CS_PIN, LCD_CS_PIN_DISABLE);
 }
 
 /*******************************************************************************
 function: 
-	Write command and associated data
+    Write command and associated data
 *******************************************************************************/
 static void Hal_LCD_Command_Write_Data(uint8_t cmd, void *data, int data_len)
 {
@@ -130,7 +146,7 @@ static void Hal_LCD_Command_Write_Data(uint8_t cmd, void *data, int data_len)
 
 /*******************************************************************************
 function:
-		Write commands
+        Write commands
 *******************************************************************************/
 static void Hal_LCD_Command_Write(uint8_t cmd)	 
 {	
@@ -139,25 +155,27 @@ static void Hal_LCD_Command_Write(uint8_t cmd)
 
 /******************************************************************************
 function:	
-		Common register initialization
+        Common register initialization
 ******************************************************************************/
 void Hal_LCD_Init(void)
 {
+    LOG_INFO("Beginning Hal LCD Initialization");
+
     HAL_LCD_GPIO_Init();
     Hal_LCD_SPI_Init();
 
-	Hal_LCD_Reset();
+    Hal_LCD_Reset();
 
     HAL_LCD_MADCTL_REG_t madctl_reg = {0};
     //madctl_reg.regs.MY = 1;
     //madctl_reg.regs.MV = 1;
     madctl_reg.data = 0xA0;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_M_ACCESS_CTL, &madctl_reg, sizeof(madctl_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_M_ACCESS_CTL, &madctl_reg, sizeof(madctl_reg));
 
     HAL_LCD_COLMOD_REG_t colmod_reg = {0};
     //colmod_reg.regs.CTRL_INTF_CL_FORMAT = COLMOD_CTRL_16B_PER_PIXEL;
     colmod_reg.data = 0x05;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_MODE, &colmod_reg, sizeof(colmod_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_MODE, &colmod_reg, sizeof(colmod_reg));
 
     Hal_LCD_Command_Write(LCD_CMD_ADDR_INV_ON);
 
@@ -168,7 +186,7 @@ void Hal_LCD_Init(void)
     caset_reg.data[1] = 0x00;
     caset_reg.data[2] = 0x01;
     caset_reg.data[3] = 0x3F;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_ADDR_SET, &caset_reg, sizeof(caset_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_ADDR_SET, &caset_reg, sizeof(caset_reg));
 
     HAL_LCD_RASET_REG_t raset_reg = {0};
     //raset_reg.regs.ROW_START = 0x0000;
@@ -177,7 +195,7 @@ void Hal_LCD_Init(void)
     raset_reg.data[1] = 0x00;
     raset_reg.data[2] = 0x00;
     raset_reg.data[3] = 0xEF;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_ROW_ADDR_SET, &raset_reg, sizeof(raset_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_ROW_ADDR_SET, &raset_reg, sizeof(raset_reg));
 
     HAL_LCD_PORCTRL_REG_t porch_reg = {0};
     //porch_reg.regs.BPA = 0xC;
@@ -192,18 +210,18 @@ void Hal_LCD_Init(void)
     porch_reg.data[2] = 0x00;
     porch_reg.data[3] = 0x33;
     porch_reg.data[4] = 0x33;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_PORCH_CTRL, &porch_reg, sizeof(porch_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_PORCH_CTRL, &porch_reg, sizeof(porch_reg));
 
     HAL_LCD_GCTRL_REG_t gctrl_reg = {0};
     //gctrl_reg.regs.VGHS = GCTRL_VGH_13_26V;
     //gctrl_reg.regs.VGLS = GCTRL_VGL_NEG_10_43V;
     gctrl_reg.data = 0x35;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_GATE_V_CTRL, &gctrl_reg, sizeof(gctrl_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_GATE_V_CTRL, &gctrl_reg, sizeof(gctrl_reg));
 
     HAL_LCD_VCOMS_REG_t vcom_reg = {0};
     //vcom_reg.regs.VCOM = 0x1F; // 0.875V
     vcom_reg.data = 0x1F;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VCOM_SET, &vcom_reg, sizeof(vcom_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VCOM_SET, &vcom_reg, sizeof(vcom_reg));
 
     HAL_LCD_LCMCTRL_REG_t lcmctrl_reg = {0};
     //lcmctrl_reg.regs.XMY = 0;
@@ -214,28 +232,28 @@ void Hal_LCD_Init(void)
     //lcmctrl_reg.regs.XMV = 0;
     //lcmctrl_reg.regs.XGS = 0;
     lcmctrl_reg.data = 0x2C;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_LCM_CTRL, &lcmctrl_reg, sizeof(lcmctrl_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_LCM_CTRL, &lcmctrl_reg, sizeof(lcmctrl_reg));
 
     HAL_LCD_VDVVRHEN_REG_t vdvvrhen_reg = {0};
     //vdvvrhen_reg.regs.CMDEN = VDVVRHEN_SET_REG_FROM_CMD_WR;
     vdvvrhen_reg.data = 0x01;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VDV_VRH_EN, &vdvvrhen_reg, sizeof(vdvvrhen_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VDV_VRH_EN, &vdvvrhen_reg, sizeof(vdvvrhen_reg));
 
     HAL_LCD_VRHS_REG_t vrhs_reg = {0};
     //vrhs_reg.regs.VRHS = 0x12; // 4.45V + (vcom + vcom_offset + vdv)
     vrhs_reg.data = 0x12;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VRH_SET, &vrhs_reg, sizeof(vrhs_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VRH_SET, &vrhs_reg, sizeof(vrhs_reg));
 
     HAL_LCD_VDVS_REG_t vdvs_reg = {0};
     //vdvs_reg.regs.VDVS = 0x20; // 0V
     vdvs_reg.data = 0x20;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VDV_SET, &vdvs_reg, sizeof(vdvs_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VDV_SET, &vdvs_reg, sizeof(vdvs_reg));
 
     HAL_LCD_FRCTRL2_REG_t frctrl2_reg = {0};
     //frctrl2_reg.regs.NLA = 0x0; // Dot inversion
     //frctrl2_reg.regs.RTNA = 0xF; // 60Hz
     frctrl2_reg.data = 0x0F;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_FR_CTRL_2, &frctrl2_reg, sizeof(frctrl2_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_FR_CTRL_2, &frctrl2_reg, sizeof(frctrl2_reg));
 
     HAL_LCD_PWCTRL1_REG_t pwctrl1_reg = {0};
     //pwctrl1_reg.regs.DEFAULT = 0xA4; // Default must be written
@@ -244,7 +262,7 @@ void Hal_LCD_Init(void)
     //pwctrl1_reg.regs.VDS = VDS_2_3V;
     pwctrl1_reg.data[0] = 0xA4;
     pwctrl1_reg.data[1] = 0xA1;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_PW_CTRL_1, &pwctrl1_reg, sizeof(pwctrl1_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_PW_CTRL_1, &pwctrl1_reg, sizeof(pwctrl1_reg));
 
     HAL_LCD_PVGAMCTRL_REG_t pvgamctrl_reg;
     pvgamctrl_reg.data[0] = 0xD0;
@@ -261,50 +279,58 @@ void Hal_LCD_Init(void)
     pvgamctrl_reg.data[11] = 0x14;
     pvgamctrl_reg.data[12] = 0x29;
     pvgamctrl_reg.data[13] = 0x2D;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_POS_V_GAM_CTL, &pvgamctrl_reg, sizeof(pvgamctrl_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_POS_V_GAM_CTL, &pvgamctrl_reg, sizeof(pvgamctrl_reg));
 
     HAL_LCD_NVGAMCTRL_REG_t nvgamctrl_reg;
-	nvgamctrl_reg.data[0] = 0xD0;
-	nvgamctrl_reg.data[1] = 0x08;
-	nvgamctrl_reg.data[2] = 0x10;
-	nvgamctrl_reg.data[3] = 0x08;
-	nvgamctrl_reg.data[4] = 0x06;
-	nvgamctrl_reg.data[5] = 0x06;
-	nvgamctrl_reg.data[6] = 0x39;
-	nvgamctrl_reg.data[7] = 0x44;
-	nvgamctrl_reg.data[8] = 0x51;
-	nvgamctrl_reg.data[9] = 0x0B;
-	nvgamctrl_reg.data[10] = 0x16;
-	nvgamctrl_reg.data[11] = 0x14;
-	nvgamctrl_reg.data[12] = 0x2F;
-	nvgamctrl_reg.data[13] = 0x31;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_NEG_V_GAM_CTL, &nvgamctrl_reg, sizeof(nvgamctrl_reg));
+    nvgamctrl_reg.data[0] = 0xD0;
+    nvgamctrl_reg.data[1] = 0x08;
+    nvgamctrl_reg.data[2] = 0x10;
+    nvgamctrl_reg.data[3] = 0x08;
+    nvgamctrl_reg.data[4] = 0x06;
+    nvgamctrl_reg.data[5] = 0x06;
+    nvgamctrl_reg.data[6] = 0x39;
+    nvgamctrl_reg.data[7] = 0x44;
+    nvgamctrl_reg.data[8] = 0x51;
+    nvgamctrl_reg.data[9] = 0x0B;
+    nvgamctrl_reg.data[10] = 0x16;
+    nvgamctrl_reg.data[11] = 0x14;
+    nvgamctrl_reg.data[12] = 0x2F;
+    nvgamctrl_reg.data[13] = 0x31;
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_NEG_V_GAM_CTL, &nvgamctrl_reg, sizeof(nvgamctrl_reg));
 
-	Hal_LCD_Command_Write(LCD_CMD_ADDR_INV_ON);
-	Hal_LCD_Command_Write(LCD_CMD_ADDR_SLP_OUT);
-	Hal_LCD_Command_Write(LCD_CMD_ADDR_DISP_ON);
+    Hal_LCD_Command_Write(LCD_CMD_ADDR_INV_ON);
+    Hal_LCD_Command_Write(LCD_CMD_ADDR_SLP_OUT);
+    Hal_LCD_Command_Write(LCD_CMD_ADDR_DISP_ON);
+
+    LOG_INFO("HAL LCD Initialization complete");
 }
 
 /******************************************************************************
 function:	Toggle the backlight (0 off | >0 on)
 parameter	:
-	    data: 	Setting of the screen backlight
+        data: 	Setting of the screen backlight
 ******************************************************************************/
 void Hal_LCD_SetBackLight(uint8_t data)
 {
-	GPIO_DIGITAL_WRITE(LCD_BL_PIN, data);
+    GPIO_DIGITAL_WRITE(LCD_BL_PIN, data);
 }
 
 /******************************************************************************
 function:	Set the cursor position
 parameter	:
-	  Xstart: 	Start uint16_t x coordinate
-	  Ystart:	Start uint16_t y coordinate
-	  Xend  :	End uint16_t coordinates
-	  Yend  :	End uint16_t coordinatesen
+      Xstart: 	Start uint16_t x coordinate
+      Ystart:	Start uint16_t y coordinate
+      Xend  :	End uint16_t coordinates
+      Yend  :	End uint16_t coordinatesen
 ******************************************************************************/
 void Hal_LCD_SetWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend)
 {
+    if(Xstart > Xend || Ystart > Yend)
+    {
+        LOG_ERROR("Pixel X/Y start is greater than end index");
+        return;
+    }
+
     HAL_LCD_CASET_REG_t caset_reg = {0};
     //caset_reg.regs.COL_START = Xstart;
     //caset_reg.regs.COL_END = Xend;
@@ -312,7 +338,7 @@ void Hal_LCD_SetWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t
     caset_reg.data[1] = Xstart & 0xFF;
     caset_reg.data[2] = Xend >> 8;
     caset_reg.data[3] = Xend & 0xFF;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_ADDR_SET, &caset_reg, sizeof(caset_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_ADDR_SET, &caset_reg, sizeof(caset_reg));
 
     HAL_LCD_RASET_REG_t raset_reg = {0};
     //raset_reg.regs.ROW_START = Ystart;
@@ -321,14 +347,14 @@ void Hal_LCD_SetWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t
     raset_reg.data[1] = Ystart & 0xFF;
     raset_reg.data[2] = Yend >> 8;
     raset_reg.data[3] = Yend & 0xFF;
-	Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_ROW_ADDR_SET, &raset_reg, sizeof(raset_reg));
+    Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_ROW_ADDR_SET, &raset_reg, sizeof(raset_reg));
 }
 
 /******************************************************************************
 function:	Settings window
 parameter	:
-	  Xstart: 	Start uint16_t x coordinate
-	  Ystart:	Start uint16_t y coordinate
+      Xstart: 	Start uint16_t x coordinate
+      Ystart:	Start uint16_t y coordinate
 
 ******************************************************************************/
 void Hal_LCD_SetCursor(uint16_t X, uint16_t Y)
@@ -339,17 +365,21 @@ void Hal_LCD_SetCursor(uint16_t X, uint16_t Y)
 /******************************************************************************
 function:	Refresh a certain area to the same color
 parameter	:
-	  Xstart: Start uint16_t x coordinate
-	  Ystart:	Start uint16_t y coordinate
-	  Xend  :	End uint16_t coordinates
-	  Yend  :	End uint16_t coordinates
-	  color :	Set the color
+      Xstart: Start uint16_t x coordinate
+      Ystart:	Start uint16_t y coordinate
+      Xend  :	End uint16_t coordinates
+      Yend  :	End uint16_t coordinates
+      color :	Set the color
 ******************************************************************************/
 void Hal_LCD_ClearWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend, uint16_t color)
 {
-    if(Xstart > Xend || Ystart > Yend) { return; }
+    if(Xstart > Xend || Ystart > Yend)
+    {
+        LOG_ERROR("Pixel X/Y start is greater than end index");
+        return;
+    }
 
-	int i;
+    int i;
     int windowXSize = Xend - Xstart + 1;
     int windowYSize = Yend - Ystart + 1;
 
@@ -362,7 +392,7 @@ void Hal_LCD_ClearWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16
         colBuffer[i + 1] = color & 0xFF;
     }
 
-	Hal_LCD_SetWindow(Xstart, Ystart, Xend, Yend);
+    Hal_LCD_SetWindow(Xstart, Ystart, Xend, Yend);
     Hal_LCD_Command_Write(LCD_CMD_ADDR_ROW_ADDR_MWR);
 
     // Send each line separately
@@ -377,7 +407,7 @@ void Hal_LCD_ClearWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16
 /******************************************************************************
 function:	Clear screen function, refresh the screen to a certain color
 parameter	:
-	  Color :		The color you want to clear all the screen
+      Color :		The color you want to clear all the screen
 ******************************************************************************/
 void Hal_LCD_Clear(uint16_t color)
 {
@@ -387,30 +417,36 @@ void Hal_LCD_Clear(uint16_t color)
 /******************************************************************************
 function: Draw a point
 parameter	:
-	    X	: 	Set the X coordinate
-	    Y	:	Set the Y coordinate
-	  Color :	Set the color
+        X	: 	Set the X coordinate
+        Y	:	Set the Y coordinate
+      Color :	Set the color
 ******************************************************************************/
 void Hal_LCD_DrawPoint(uint16_t x, uint16_t y, uint16_t color)
 {
-	Hal_LCD_SetCursor(x, y);
+    Hal_LCD_SetCursor(x, y);
     Hal_LCD_Command_Write(LCD_CMD_ADDR_ROW_ADDR_MWR);
-	Hal_LCD_Data_Write(&color, sizeof(color));    
+    Hal_LCD_Data_Write(&color, sizeof(color));    
 }
 
 /******************************************************************************
 function: Draw a point
 parameter	:
-	    X	: 	Set the X coordinate
-	    Y	:	Set the Y coordinate
-	  Color :	Set the color
+        X	: 	Set the X coordinate
+        Y	:	Set the Y coordinate
+      Color :	Set the color
 ******************************************************************************/
 void Hal_LCD_DrawImage(const void* img, uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend)
 {
-    if(Xstart > Xend || Ystart > Yend || img == NULL)
+    if(Xstart > Xend || Ystart > Yend)
     {
-        
+        LOG_ERROR("Pixel X/Y start is greater than end index");
         return; 
+    }
+
+    if(img == NULL)
+    {
+        LOG_ERROR("img pointer null");
+        return;
     }
 
     int img_size = (Xstart - Xend) * (Ystart - Yend) * 2;
