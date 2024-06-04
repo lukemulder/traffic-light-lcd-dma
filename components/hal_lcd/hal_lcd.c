@@ -166,136 +166,124 @@ void Hal_LCD_Init(void)
 
     Hal_LCD_Reset();
 
+
     HAL_LCD_MADCTL_REG_t madctl_reg = {0};
-    //madctl_reg.regs.MY = 1;
-    //madctl_reg.regs.MV = 1;
-    madctl_reg.data = 0xA0;
+    madctl_reg.regs.MY = 1;
+    madctl_reg.regs.MV = 1;
+    //madctl_reg.data = 0xA0;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_M_ACCESS_CTL, &madctl_reg, sizeof(madctl_reg));
 
     HAL_LCD_COLMOD_REG_t colmod_reg = {0};
-    //colmod_reg.regs.CTRL_INTF_CL_FORMAT = COLMOD_CTRL_16B_PER_PIXEL;
-    colmod_reg.data = 0x05;
+    colmod_reg.regs.CTRL_INTF_CL_FORMAT = COLMOD_CTRL_16B_PER_PIXEL;
+    //colmod_reg.data = 0x05;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_MODE, &colmod_reg, sizeof(colmod_reg));
 
     Hal_LCD_Command_Write(LCD_CMD_ADDR_INV_ON);
 
     HAL_LCD_CASET_REG_t caset_reg = {0};
-    //caset_reg.regs.COL_START = 0x0000;
-    //caset_reg.regs.COL_END = 0x013F;
-    caset_reg.data[0] = 0x00;
-    caset_reg.data[1] = 0x00;
-    caset_reg.data[2] = 0x01;
-    caset_reg.data[3] = 0x3F;
+    caset_reg.regs.COL_START = TO_BIG_ENDIAN_16(0x0000);
+    caset_reg.regs.COL_END = TO_BIG_ENDIAN_16(0x013F);
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_ADDR_SET, &caset_reg, sizeof(caset_reg));
 
     HAL_LCD_RASET_REG_t raset_reg = {0};
-    //raset_reg.regs.ROW_START = 0x0000;
-    //raset_reg.regs.ROW_END = 0x00EF;
-    raset_reg.data[0] = 0x00;
-    raset_reg.data[1] = 0x00;
-    raset_reg.data[2] = 0x00;
-    raset_reg.data[3] = 0xEF;
+    raset_reg.regs.ROW_START = TO_BIG_ENDIAN_16(0x0000);
+    raset_reg.regs.ROW_END = TO_BIG_ENDIAN_16(0x00EF);
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_ROW_ADDR_SET, &raset_reg, sizeof(raset_reg));
 
     HAL_LCD_PORCTRL_REG_t porch_reg = {0};
-    //porch_reg.regs.BPA = 0xC;
-    //porch_reg.regs.FPA = 0xC;
-    //porch_reg.regs.PSEN = 0;
-    //porch_reg.regs.BPB = 0x3;
-    //porch_reg.regs.FPB = 0x3;
-    //porch_reg.regs.BPC = 0x3;
-    //porch_reg.regs.FPC = 0x3;
-    porch_reg.data[0] = 0x0C;
-    porch_reg.data[1] = 0x0C;
-    porch_reg.data[2] = 0x00;
-    porch_reg.data[3] = 0x33;
-    porch_reg.data[4] = 0x33;
+    porch_reg.regs.BPA = 0xC;
+    porch_reg.regs.FPA = 0xC;
+    porch_reg.regs.PSEN = 0;
+    porch_reg.regs.BPB = 0x3;
+    porch_reg.regs.FPB = 0x3;
+    porch_reg.regs.BPC = 0x3;
+    porch_reg.regs.FPC = 0x3;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_PORCH_CTRL, &porch_reg, sizeof(porch_reg));
 
     HAL_LCD_GCTRL_REG_t gctrl_reg = {0};
-    //gctrl_reg.regs.VGHS = GCTRL_VGH_13_26V;
-    //gctrl_reg.regs.VGLS = GCTRL_VGL_NEG_10_43V;
-    gctrl_reg.data = 0x35;
+    gctrl_reg.regs.VGHS = GCTRL_VGH_13_26V;
+    gctrl_reg.regs.VGLS = GCTRL_VGL_NEG_10_43V;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_GATE_V_CTRL, &gctrl_reg, sizeof(gctrl_reg));
 
     HAL_LCD_VCOMS_REG_t vcom_reg = {0};
-    //vcom_reg.regs.VCOM = 0x1F; // 0.875V
-    vcom_reg.data = 0x1F;
+    vcom_reg.regs.VCOM = 0x1F; // 0.875V
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VCOM_SET, &vcom_reg, sizeof(vcom_reg));
 
     HAL_LCD_LCMCTRL_REG_t lcmctrl_reg = {0};
-    //lcmctrl_reg.regs.XMY = 0;
-    //lcmctrl_reg.regs.XBGR = 1;
-    //lcmctrl_reg.regs.XINV = 0;
-    //lcmctrl_reg.regs.XMX = 1;
-    //lcmctrl_reg.regs.XMH = 1;
-    //lcmctrl_reg.regs.XMV = 0;
-    //lcmctrl_reg.regs.XGS = 0;
-    lcmctrl_reg.data = 0x2C;
+    lcmctrl_reg.regs.XMY = 0;
+    lcmctrl_reg.regs.XBGR = 1;
+    lcmctrl_reg.regs.XINV = 0;
+    lcmctrl_reg.regs.XMX = 1;
+    lcmctrl_reg.regs.XMH = 1;
+    lcmctrl_reg.regs.XMV = 0;
+    lcmctrl_reg.regs.XGS = 0;
+    //lcmctrl_reg.data = 0x2C;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_LCM_CTRL, &lcmctrl_reg, sizeof(lcmctrl_reg));
 
     HAL_LCD_VDVVRHEN_REG_t vdvvrhen_reg = {0};
-    //vdvvrhen_reg.regs.CMDEN = VDVVRHEN_SET_REG_FROM_CMD_WR;
-    vdvvrhen_reg.data = 0x01;
+    vdvvrhen_reg.regs.CMDEN = VDVVRHEN_SET_REG_FROM_CMD_WR;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VDV_VRH_EN, &vdvvrhen_reg, sizeof(vdvvrhen_reg));
 
     HAL_LCD_VRHS_REG_t vrhs_reg = {0};
-    //vrhs_reg.regs.VRHS = 0x12; // 4.45V + (vcom + vcom_offset + vdv)
-    vrhs_reg.data = 0x12;
+    vrhs_reg.regs.VRHS = 0x12; // 4.45V + (vcom + vcom_offset + vdv)
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VRH_SET, &vrhs_reg, sizeof(vrhs_reg));
 
     HAL_LCD_VDVS_REG_t vdvs_reg = {0};
-    //vdvs_reg.regs.VDVS = 0x20; // 0V
-    vdvs_reg.data = 0x20;
+    vdvs_reg.regs.VDVS = 0x20; // 0V
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_VDV_SET, &vdvs_reg, sizeof(vdvs_reg));
 
     HAL_LCD_FRCTRL2_REG_t frctrl2_reg = {0};
-    //frctrl2_reg.regs.NLA = 0x0; // Dot inversion
-    //frctrl2_reg.regs.RTNA = 0xF; // 60Hz
-    frctrl2_reg.data = 0x0F;
+    frctrl2_reg.regs.NLA = 0x0; // Dot inversion
+    frctrl2_reg.regs.RTNA = 0xF; // 60Hz
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_FR_CTRL_2, &frctrl2_reg, sizeof(frctrl2_reg));
 
     HAL_LCD_PWCTRL1_REG_t pwctrl1_reg = {0};
-    //pwctrl1_reg.regs.DEFAULT = 0xA4; // Default must be written
-    //pwctrl1_reg.regs.AVDD = AVDD_6_8V;
-    //pwctrl1_reg.regs.AVCL = AVCL_NEG_4_8V;
-    //pwctrl1_reg.regs.VDS = VDS_2_3V;
-    pwctrl1_reg.data[0] = 0xA4;
-    pwctrl1_reg.data[1] = 0xA1;
+    pwctrl1_reg.regs.DEFAULT = 0xA4; // Default must be written
+    pwctrl1_reg.regs.AVDD = AVDD_6_8V;
+    pwctrl1_reg.regs.AVCL = AVCL_NEG_4_8V;
+    pwctrl1_reg.regs.VDS = VDS_2_3V;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_PW_CTRL_1, &pwctrl1_reg, sizeof(pwctrl1_reg));
 
-    HAL_LCD_PVGAMCTRL_REG_t pvgamctrl_reg;
-    pvgamctrl_reg.data[0] = 0xD0;
-    pvgamctrl_reg.data[1] = 0x08;
-    pvgamctrl_reg.data[2] = 0x11;
-    pvgamctrl_reg.data[3] = 0x08;
-    pvgamctrl_reg.data[4] = 0x0C;
-    pvgamctrl_reg.data[5] = 0x15;
-    pvgamctrl_reg.data[6] = 0x39;
-    pvgamctrl_reg.data[7] = 0x33;
-    pvgamctrl_reg.data[8] = 0x50;
-    pvgamctrl_reg.data[9] = 0x36;
-    pvgamctrl_reg.data[10] = 0x13;
-    pvgamctrl_reg.data[11] = 0x14;
-    pvgamctrl_reg.data[12] = 0x29;
-    pvgamctrl_reg.data[13] = 0x2D;
+    HAL_LCD_PVGAMCTRL_REG_t pvgamctrl_reg = {0};
+    pvgamctrl_reg.regs.VP0  = 0x0;
+    pvgamctrl_reg.regs.VP63 = 0xD;
+    pvgamctrl_reg.regs.VP1  = 0x08;
+    pvgamctrl_reg.regs.VP2  = 0x11;
+    pvgamctrl_reg.regs.VP4  = 0x08;
+    pvgamctrl_reg.regs.VP6  = 0x0C;
+    pvgamctrl_reg.regs.VP13 = 0x05;
+    pvgamctrl_reg.regs.JP0  = 0x01;
+    pvgamctrl_reg.regs.VP20 = 0x39;
+    pvgamctrl_reg.regs.VP27 = 0x03;
+    pvgamctrl_reg.regs.VP36 = 0x03;
+    pvgamctrl_reg.regs.VP43 = 0x50;
+    pvgamctrl_reg.regs.VP50 = 0x06;
+    pvgamctrl_reg.regs.JP1  = 0x03;
+    pvgamctrl_reg.regs.VP57 = 0x13;
+    pvgamctrl_reg.regs.VP59 = 0x14;
+    pvgamctrl_reg.regs.VP61 = 0x29;
+    pvgamctrl_reg.regs.VP62 = 0x2D;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_POS_V_GAM_CTL, &pvgamctrl_reg, sizeof(pvgamctrl_reg));
 
-    HAL_LCD_NVGAMCTRL_REG_t nvgamctrl_reg;
-    nvgamctrl_reg.data[0] = 0xD0;
-    nvgamctrl_reg.data[1] = 0x08;
-    nvgamctrl_reg.data[2] = 0x10;
-    nvgamctrl_reg.data[3] = 0x08;
-    nvgamctrl_reg.data[4] = 0x06;
-    nvgamctrl_reg.data[5] = 0x06;
-    nvgamctrl_reg.data[6] = 0x39;
-    nvgamctrl_reg.data[7] = 0x44;
-    nvgamctrl_reg.data[8] = 0x51;
-    nvgamctrl_reg.data[9] = 0x0B;
-    nvgamctrl_reg.data[10] = 0x16;
-    nvgamctrl_reg.data[11] = 0x14;
-    nvgamctrl_reg.data[12] = 0x2F;
-    nvgamctrl_reg.data[13] = 0x31;
+    HAL_LCD_NVGAMCTRL_REG_t nvgamctrl_reg = {0};
+    nvgamctrl_reg.regs.VN0  = 0x0;
+    nvgamctrl_reg.regs.VN63 = 0xD;
+    nvgamctrl_reg.regs.VN1  = 0x08;
+    nvgamctrl_reg.regs.VN2  = 0x10;
+    nvgamctrl_reg.regs.VN4  = 0x08;
+    nvgamctrl_reg.regs.VN6  = 0x06;
+    nvgamctrl_reg.regs.VN13 = 0x06;
+    nvgamctrl_reg.regs.JN0  = 0x0;
+    nvgamctrl_reg.regs.VN20 = 0x39;
+    nvgamctrl_reg.regs.VN27 = 0x4;
+    nvgamctrl_reg.regs.VN36 = 0x4;
+    nvgamctrl_reg.regs.VN43 = 0x51;
+    nvgamctrl_reg.regs.VN50 = 0xB;
+    nvgamctrl_reg.regs.JN1  = 0x0;
+    nvgamctrl_reg.regs.VN57 = 0x16;
+    nvgamctrl_reg.regs.VN59 = 0x14;
+    nvgamctrl_reg.regs.VN61 = 0x2F;
+    nvgamctrl_reg.regs.VN62 = 0x31;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_NEG_V_GAM_CTL, &nvgamctrl_reg, sizeof(nvgamctrl_reg));
 
     Hal_LCD_Command_Write(LCD_CMD_ADDR_INV_ON);

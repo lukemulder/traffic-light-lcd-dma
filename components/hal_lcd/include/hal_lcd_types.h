@@ -34,6 +34,12 @@
 
 #include <stdint.h>
 
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    #define TO_BIG_ENDIAN_16(x) __builtin_bswap16(x)
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    #define TO_BIG_ENDIAN_16(x) (x)
+#endif
+
 // System Function Command Table 1
 
 #define LCD_CMD_ADDR_NOP           (uint8_t)0x00
@@ -150,26 +156,27 @@
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t MY: 1;       // D7: Page Address Order
-        uint8_t MX: 1;       // D6: Column Address Order
-        uint8_t MV: 1;       // D5: Page/Column Order
-        uint8_t ML: 1;       // D4: Line Address Order
-        uint8_t RGB: 1;      // D3: RGB/BGR Order
-        uint8_t MH: 1;       // D2: Display Data Latch Order
         uint8_t reserved: 2; // D1, D0: Reserved bits
+        uint8_t MH: 1;       // D2: Display Data Latch Order
+        uint8_t RGB: 1;      // D3: RGB/BGR Order
+        uint8_t ML: 1;       // D4: Line Address Order
+        uint8_t MV: 1;       // D5: Page/Column Order
+        uint8_t MX: 1;       // D6: Column Address Order
+        uint8_t MY: 1;       // D7: Page Address Order
     } regs;
     uint8_t data;
 } HAL_LCD_MADCTL_REG_t;
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t reserved0:           1; // D7: Set to 0
-        uint8_t RGB_INTF_CL_FORMAT:  3; // D6-D4: RGB Interface Color Format
-        uint8_t reserved1:           1; // D3: Set to 0
         uint8_t CTRL_INTF_CL_FORMAT: 3; // D2-D0: Control Interface Color Format
+        uint8_t reserved1:           1; // D3: Reserved
+        uint8_t RGB_INTF_CL_FORMAT:  3; // D6-D4: RGB Interface Color Format
+        uint8_t reserved0:           1; // D7: Reserved
     } regs;
     uint8_t data;
 } HAL_LCD_COLMOD_REG_t;
+
 
 #define COLMOD_RGB_INTERFACE_65K  0b101 // 65K of RGB Interface
 #define COLMOD_RGB_INTERFACE_262K 0b110 // 262K of RGB Interface
@@ -187,8 +194,6 @@ typedef union {
     uint8_t data[4];
 } HAL_LCD_CASET_REG_t;
 
-
-
 typedef union {
     struct __attribute__((packed)) {
         uint16_t ROW_START; // Row Start Index
@@ -199,14 +204,14 @@ typedef union {
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t reserved0: 1; // D7: Reserved
         uint8_t BPA:       7; // D0-D6: Back porch setting in normal mode. Minimum is 0x01
+        uint8_t reserved0: 1; // D7: Reserved
 
-        uint8_t reserved1: 1; // D7: Reserved
         uint8_t FPA:       7; // D0-D6: Front porch setting in normal mode. Minimum is 0x01
+        uint8_t reserved1: 1; // D7: Reserved
 
-        uint8_t reserved2: 7; // D1-D7: Reserved
         uint8_t PSEN:      1; // D0: Enable separate porch control (0 disable, 1 enable)
+        uint8_t reserved2: 7; // D1-D7: Reserved
 
         uint8_t FPB:       4; // D4-D7: Front porch setting in idle mode. Minimum is 0x01
         uint8_t BPB:       4; // D0-D3: Back porch setting in idle mode. Minimum is 0x01
@@ -214,15 +219,15 @@ typedef union {
         uint8_t FPC:       4; // D4-D7: Front porch setting in partial mode. Minimum is 0x01
         uint8_t BPC:       4; // D0-D3: Back porch setting in partial mode. Minimum is 0x01
     } regs;
-    uint8_t data[5];  // Total size should be 5 bytes
+    uint8_t data[5];
 } HAL_LCD_PORCTRL_REG_t;
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t reserved1: 1;
-        uint8_t VGHS:      3; // Voltage Gate High Setting
-        uint8_t reserved0: 1; 
         uint8_t VGLS:      3; // Voltage Gate Low Setting
+        uint8_t reserved0: 1;
+        uint8_t VGHS:      3; // Voltage Gate High Setting 
+        uint8_t reserved1: 1;
     } regs;
     uint8_t data;  // Total size should be 1 byte
 } HAL_LCD_GCTRL_REG_t;
@@ -247,30 +252,30 @@ typedef union {
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t reserved:  2; // Unused bits
         uint8_t VCOM:      6; // Common Voltage for LCD
+        uint8_t reserved:  2;
     } regs;
     uint8_t data;
 } HAL_LCD_VCOMS_REG_t;
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t reserved:  1; // D7: Unused bit
-        uint8_t XMY:       1; // D6: XOR MY setting, mirrors the display vertically
-        uint8_t XBGR:      1; // D5: XOR RGB setting, switches between RGB and BGR color order
-        uint8_t XINV:      1; // D4: XOR inverse setting, inverts the display colors
-        uint8_t XMX:       1; // D3: XOR MX setting, mirrors the display horizontally
-        uint8_t XMH:       1; // D2: This bit can reverse source output order and only supports RGB interface without RAM mode
-        uint8_t XMV:       1; // D1: XOR MV setting, changes row/column exchange
         uint8_t XGS:       1; // D0: XOR GS setting, adjusts gray scale inversion
+        uint8_t XMV:       1; // D1: XOR MV setting, changes row/column exchange
+        uint8_t XMH:       1; // D2: This bit can reverse source output order and only supports RGB interface without RAM mode
+        uint8_t XMX:       1; // D3: XOR MX setting, mirrors the display horizontally
+        uint8_t XINV:      1; // D4: XOR inverse setting, inverts the display colors
+        uint8_t XBGR:      1; // D5: XOR RGB setting, switches between RGB and BGR color order
+        uint8_t XMY:       1; // D6: XOR MY setting, mirrors the display vertically
+        uint8_t reserved:  1; // D7: Reserved
     } regs;
     uint8_t data;
 } HAL_LCD_LCMCTRL_REG_t;
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t reserved: 7; // D7 - D1: Unused bits
         uint8_t CMDEN:    1; // VDV and VRH command write enable
+        uint8_t reserved: 7; // D1-D7: Reserved
     } regs;
     uint8_t data;
 } HAL_LCD_VDVVRHEN_REG_t;
@@ -280,24 +285,24 @@ typedef union {
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t reserved: 2; // Unused bits
         uint8_t VRHS:     6; // VRH Setting
+        uint8_t reserved: 2;
     } regs;
     uint8_t data;
 } HAL_LCD_VRHS_REG_t;
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t reserved: 2; // Unused bits
         uint8_t VDVS:     6; // VDV Setting
+        uint8_t reserved: 2;
     } regs;
     uint8_t data;
 } HAL_LCD_VDVS_REG_t;
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t NLA:   3;  // Inversion selection in normal mode
         uint8_t RTNA:  5;  // Frame rate control in normal mode
+        uint8_t NLA:   3;  // Inversion selection in normal mode
     } regs;
     uint8_t data;
 } HAL_LCD_FRCTRL2_REG_t;
@@ -306,10 +311,10 @@ typedef union {
     struct __attribute__((packed)) {
         uint8_t DEFAULT;  // Default write of A4 must be written
 
-        uint8_t AVDD:      2;  // Analog Voltage Supply Setting
-        uint8_t AVCL:      2;  // Analog Voltage Ground Setting
-        uint8_t reserved1: 2;  // Unused bits
         uint8_t VDS:       2;  // Drain-Source Voltage
+        uint8_t reserved1: 2;  // Unused bits
+        uint8_t AVCL:      2;  // Analog Voltage Ground Setting
+        uint8_t AVDD:      2;  // Analog Voltage Supply Setting
     } regs;
     uint8_t data[2];  // Total size should be 2 bytes
 } HAL_LCD_PWCTRL1_REG_t;
@@ -333,104 +338,104 @@ typedef union {
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t VP63      : 4; // VP63[3:0]
         uint8_t VP0       : 4; // VP0[3:0]
+        uint8_t VP63      : 4; // VP63[3:0]
 
-        uint8_t reserved1 : 2; // Unused bits to align to 8 bits
         uint8_t VP1       : 6; // VP1[5:0]
+        uint8_t reserved1 : 2; // Reserved
 
-        uint8_t reserved2 : 2; // Unused bits
         uint8_t VP2       : 6; // VP2[5:0]
+        uint8_t reserved2 : 2; // Unused bits
 
-        uint8_t reserved3 : 3; // Unused bits
         uint8_t VP4       : 5; // VP4[4:0]
+        uint8_t reserved3 : 3; // Unused bits
 
-        uint8_t reserved4 : 3; // Unused bits
         uint8_t VP6       : 5; // VP6[4:0]
+        uint8_t reserved4 : 3; // Unused bits
 
-        uint8_t reserved5 : 2; // Unused bits
-        uint8_t JP0       : 2; // JP0[1:0]
         uint8_t VP13      : 4; // VP13[3:0]
+        uint8_t JP0       : 2; // JP0[1:0]
+        uint8_t reserved5 : 2; // Unused bits
 
-        uint8_t reserved6 : 1; // Unused bits
         uint8_t VP20      : 7; // VP20[6:0]
+        uint8_t reserved6 : 1; // Unused bits
 
-        uint8_t reserved8 : 1; // Unused bits
-        uint8_t VP36      : 3; // VP36[2:0]
-        uint8_t reserved7 : 1; // Unused bits
         uint8_t VP27      : 3; // VP27[2:0]
+        uint8_t reserved7 : 1; // Unused bits
+        uint8_t VP36      : 3; // VP36[2:0]
+        uint8_t reserved8 : 1; // Unused bits
 
-        uint8_t reserved9 : 1; // Unused bits
         uint8_t VP43      : 7; // VP43[6:0]
+        uint8_t reserved9 : 1; // Unused bits
 
-        uint8_t reserved10: 2; // Unused bits
-        uint8_t JP1       : 2; // JP1[1:0]
         uint8_t VP50      : 4; // VP50[3:0]
+        uint8_t JP1       : 2; // JP1[1:0]
+        uint8_t reserved10: 2; // Unused bits
 
-        uint8_t reserved11: 3; // Unused bits
         uint8_t VP57      : 5; // VP57[4:0]
+        uint8_t reserved11: 3; // Unused bits
 
-        uint8_t reserved12: 3; // Unused bits
         uint8_t VP59      : 5; // VP59[4:0]
+        uint8_t reserved12: 3; // Unused bits
 
-        uint8_t reserved13: 2; // Unused bits
         uint8_t VP61      : 6; // VP61[5:0]
+        uint8_t reserved13: 2; // Unused bits
 
-        uint8_t reserved14: 2; // Unused bits
         uint8_t VP62      : 6; // VP62[5:0]
+        uint8_t reserved14: 2; // Unused bits
     } regs;
-    uint8_t data[14];  // Total size is 14 bytes to fit all parameters
+    uint8_t data[14];
 } HAL_LCD_PVGAMCTRL_REG_t;
 
 typedef union {
     struct __attribute__((packed)) {
-        uint8_t VN63      : 4; // VN63[3:0]
         uint8_t VN0       : 4; // VN0[3:0]
+        uint8_t VN63      : 4; // VN63[3:0]
 
-        uint8_t reserved1 : 2; // Unused bits to align to 8 bits
         uint8_t VN1       : 6; // VN1[5:0]
+        uint8_t reserved1 : 2; // Unused bits to align to 8 bits
 
-        uint8_t reserved2 : 2; // Unused bits
         uint8_t VN2       : 6; // VN2[5:0]
+        uint8_t reserved2 : 2; // Unused bits
 
-        uint8_t reserved3 : 3; // Unused bits
         uint8_t VN4       : 5; // VN4[4:0]
+        uint8_t reserved3 : 3; // Unused bits
 
-        uint8_t reserved4 : 3; // Unused bits
         uint8_t VN6       : 5; // VN6[4:0]
+        uint8_t reserved4 : 3; // Unused bits
 
-        uint8_t reserved5 : 2; // Unused bits
-        uint8_t JN0       : 2; // JN0[1:0]
         uint8_t VN13      : 4; // VN13[3:0]
+        uint8_t JN0       : 2; // JN0[1:0]
+        uint8_t reserved5 : 2; // Unused bits
 
-        uint8_t reserved6 : 1; // Unused bits
         uint8_t VN20      : 7; // VN20[6:0]
+        uint8_t reserved6 : 1; // Unused bits
 
-        uint8_t reserved8 : 1; // Unused bits
-        uint8_t VN36      : 3; // VN36[2:0]
-        uint8_t reserved7 : 1; // Unused bits
         uint8_t VN27      : 3; // VN27[2:0]
+        uint8_t reserved7 : 1; // Unused bits
+        uint8_t VN36      : 3; // VN36[2:0]
+        uint8_t reserved8 : 1; // Unused bits
 
-        uint8_t reserved9 : 1; // Unused bits
         uint8_t VN43      : 7; // VN43[6:0]
+        uint8_t reserved9 : 1; // Unused bits
 
-        uint8_t reserved10: 2; // Unused bits
-        uint8_t JN1       : 2; // JN1[1:0]
         uint8_t VN50      : 4; // VN50[3:0]
+        uint8_t JN1       : 2; // JN1[1:0]
+        uint8_t reserved10: 2; // Unused bits
 
-        uint8_t reserved11: 3; // Unused bits
         uint8_t VN57      : 5; // VN57[4:0]
+        uint8_t reserved11: 3; // Unused bits
 
-        uint8_t reserved12: 3; // Unused bits
         uint8_t VN59      : 5; // VN59[4:0]
+        uint8_t reserved12: 3; // Unused bits
 
-        uint8_t reserved13: 2; // Unused bits
         uint8_t VN61      : 6; // VN61[5:0]
+        uint8_t reserved13: 2; // Unused bits
 
-        uint8_t reserved14: 2; // Unused bits
         uint8_t VN62      : 6; // VN62[5:0]
+        uint8_t reserved14: 2; // Unused bits
     } regs;
-    uint8_t data[14];  // Total size is 14 bytes to fit all parameters
+    uint8_t data[14];
 } HAL_LCD_NVGAMCTRL_REG_t;
 
 #endif

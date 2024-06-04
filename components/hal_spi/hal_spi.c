@@ -77,7 +77,7 @@ HAL_ERR_T Hal_SPI_Transmit(Hal_SPI_Handle_t *h, uint8_t dat)
     HAL_ERR_T e;
     spi_transaction_t t;
 
-    //printf("%02X ", dat);
+    printf("%02X ", dat);
 
     memset(&t, 0, sizeof(t));
     t.length = 8;
@@ -106,12 +106,12 @@ HAL_ERR_T Hal_SPI_Transmit_Buffer(Hal_SPI_Handle_t *h, const uint8_t *data, int 
 
     HAL_ERR_T e;
     spi_transaction_t t;
-/*
+
     for(int i = 0; i < size; i++)
     {
         printf("%02X ", data[i]);
     }
-*/
+
     memset(&t, 0, sizeof(t));
     t.length = size * 8;
     t.tx_buffer = data;
