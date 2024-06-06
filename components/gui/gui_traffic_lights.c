@@ -167,98 +167,6 @@ void GUI_DrawRectangle(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t
 }
 
 /******************************************************************************
-function:	Use the 8-point method to draw a circle of the
-            specified size at the specified position->
-parameter:
-    X_Center  ：Center X coordinate
-    Y_Center  ：Center Y coordinate
-    Radius    ：circle Radius
-    color     ：The color of the ：circle segment
-    Filled    : Whether it is filled: 1 filling 0：Do not
-******************************************************************************/
-void GUI_DrawCircle(uint16_t X_Center, uint16_t Y_Center, uint16_t Radius, 
-                        uint16_t color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill )
-{
-    //Draw a circle from(0, R) as a starting point
-    int16_t XCurrent, YCurrent;
-    XCurrent = 0;
-    YCurrent = Radius;
-
-    //Cumulative error,judge the next point of the logo
-    int16_t Esp = 3 - (Radius << 1 );
-
-    int16_t sCountY;
-    if (Draw_Fill == DRAW_FILL_FULL) {
-        while (XCurrent <= YCurrent ) { //Realistic circles
-            for (sCountY = XCurrent; sCountY <= YCurrent; sCountY ++ ) {
-                GUI_DrawPoint(X_Center + XCurrent, Y_Center + sCountY, color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//1
-                GUI_DrawPoint(X_Center - XCurrent, Y_Center + sCountY, color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//2
-                GUI_DrawPoint(X_Center - sCountY, Y_Center + XCurrent, color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//3
-                GUI_DrawPoint(X_Center - sCountY, Y_Center - XCurrent, color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//4
-                GUI_DrawPoint(X_Center - XCurrent, Y_Center - sCountY, color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//5
-                GUI_DrawPoint(X_Center + XCurrent, Y_Center - sCountY, color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//6
-                GUI_DrawPoint(X_Center + sCountY, Y_Center - XCurrent, color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//7
-                GUI_DrawPoint(X_Center + sCountY, Y_Center + XCurrent, color, DOT_PIXEL_DFT, DOT_STYLE_DFT);
-            }
-            if (Esp < 0 )
-                Esp += 4 * XCurrent + 6;
-            else {
-                Esp += 10 + 4 * (XCurrent - YCurrent );
-                YCurrent --;
-            }
-            XCurrent ++;
-        }
-    } else { //Draw a hollow circle
-        while (XCurrent <= YCurrent ) {
-            GUI_DrawPoint(X_Center + XCurrent, Y_Center + YCurrent, color, Line_width, DOT_STYLE_DFT);//1
-            GUI_DrawPoint(X_Center - XCurrent, Y_Center + YCurrent, color, Line_width, DOT_STYLE_DFT);//2
-            GUI_DrawPoint(X_Center - YCurrent, Y_Center + XCurrent, color, Line_width, DOT_STYLE_DFT);//3
-            GUI_DrawPoint(X_Center - YCurrent, Y_Center - XCurrent, color, Line_width, DOT_STYLE_DFT);//4
-            GUI_DrawPoint(X_Center - XCurrent, Y_Center - YCurrent, color, Line_width, DOT_STYLE_DFT);//5
-            GUI_DrawPoint(X_Center + XCurrent, Y_Center - YCurrent, color, Line_width, DOT_STYLE_DFT);//6
-            GUI_DrawPoint(X_Center + YCurrent, Y_Center - XCurrent, color, Line_width, DOT_STYLE_DFT);//7
-            GUI_DrawPoint(X_Center + YCurrent, Y_Center + XCurrent, color, Line_width, DOT_STYLE_DFT);//0
-
-            if (Esp < 0 )
-                Esp += 4 * XCurrent + 6;
-            else {
-                Esp += 10 + 4 * (XCurrent - YCurrent );
-                YCurrent --;
-            }
-            XCurrent ++;
-        }
-    }
-}
-
-
-uint16_t** allocate_2d_array(int rows, int cols) {
-    // Allocate a single block for all array elements
-    uint16_t* data = malloc(rows * cols * sizeof(uint16_t));
-    if (data == NULL) {
-        return NULL; // Check for failed memory allocation
-    }
-
-    // Allocate memory for the row pointers
-    uint16_t** row_ptrs = malloc(rows * sizeof(uint16_t*));
-    if (row_ptrs == NULL) {
-        free(data); // Free previously allocated block if this allocation fails
-        return NULL;
-    }
-
-    // Set up the pointers to the rows
-    for (int i = 0; i < rows; i++) {
-        row_ptrs[i] = data + i * cols;
-    }
-
-    return row_ptrs;
-}
-
-void free_2d_array(uint16_t** array) {
-    free(array[0]); // Free the block of all elements
-    free(array);    // Free the array of pointers
-}
-
-/******************************************************************************
   function: Display image
   parameter:
     image            ：Image start address
@@ -324,7 +232,7 @@ void GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W
 
 void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX tl_index, TRAFFIC_LIGHT_COLOR tl_color)
 {
-    uint8_t* img;
+    const uint8_t* img;
     uint16_t xPos,yPos;
     ROTATION r;
 
@@ -385,7 +293,6 @@ void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX tl_index, TRAFFIC_LIGHT_COLOR tl_c
     }
 
     GUI_DrawImage(img, xPos, yPos, TRAFFIC_LIGHTS_WIDTH, TRAFFIC_LIGHTS_HEIGHT, r);
-
 }
 
 void GUI_TrafficLight_Init()
@@ -394,12 +301,6 @@ void GUI_TrafficLight_Init()
     GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_GREEN);
     GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_GREEN);
     GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_GREEN);
-/*
-    Hal_LCD_ClearWindow(145, 12, 145 + TRAFFIC_LIGHT_WIDTH, 12 + TRAFFIC_LIGHT_HEIGHT, COLOR_TL_BG);
-    Hal_LCD_ClearWindow(145, 160, 145 + TRAFFIC_LIGHT_WIDTH, 160 + TRAFFIC_LIGHT_HEIGHT, COLOR_TL_BG);
-    Hal_LCD_ClearWindow(32, 104, 32 + TRAFFIC_LIGHT_HEIGHT, 104 + TRAFFIC_LIGHT_WIDTH, COLOR_TL_BG);
-    Hal_LCD_ClearWindow(220, 104, 220 + TRAFFIC_LIGHT_HEIGHT, 104 + TRAFFIC_LIGHT_WIDTH, COLOR_TL_BG);
-*/
 }
 
 void GUI_DrawBackground()
