@@ -5,4 +5,4 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(traffic-light-lcd-dma)
 
 # Ensure that the paths to the components include their respective directories
-set(EXTRA_COMPONENT_DIRS "drv" "hal_lcd" "hal_pwm" "hal_spi" "lib")
+set(EXTRA_COMPONENT_DIRS "hal_lcd" "hal_pwm" "hal_spi" "lib" "gui")

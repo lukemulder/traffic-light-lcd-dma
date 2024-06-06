@@ -1,1 +1,1 @@
-idf_component_register(INCLUDE_DIRS "graphics/include" "fonts/include")
+idf_component_register(INCLUDE_DIRS "." "icons")

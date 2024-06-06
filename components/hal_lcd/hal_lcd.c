@@ -166,16 +166,13 @@ void Hal_LCD_Init(void)
 
     Hal_LCD_Reset();
 
-
     HAL_LCD_MADCTL_REG_t madctl_reg = {0};
     madctl_reg.regs.MY = 1;
     madctl_reg.regs.MV = 1;
-    //madctl_reg.data = 0xA0;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_M_ACCESS_CTL, &madctl_reg, sizeof(madctl_reg));
 
     HAL_LCD_COLMOD_REG_t colmod_reg = {0};
     colmod_reg.regs.CTRL_INTF_CL_FORMAT = COLMOD_CTRL_16B_PER_PIXEL;
-    //colmod_reg.data = 0x05;
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_MODE, &colmod_reg, sizeof(colmod_reg));
 
     Hal_LCD_Command_Write(LCD_CMD_ADDR_INV_ON);
@@ -320,21 +317,13 @@ void Hal_LCD_SetWindow(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t
     }
 
     HAL_LCD_CASET_REG_t caset_reg = {0};
-    //caset_reg.regs.COL_START = Xstart;
-    //caset_reg.regs.COL_END = Xend;
-    caset_reg.data[0] = Xstart >> 8;
-    caset_reg.data[1] = Xstart & 0xFF;
-    caset_reg.data[2] = Xend >> 8;
-    caset_reg.data[3] = Xend & 0xFF;
+    caset_reg.regs.COL_START = TO_BIG_ENDIAN_16(Xstart);
+    caset_reg.regs.COL_END = TO_BIG_ENDIAN_16(Xend);
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_COL_ADDR_SET, &caset_reg, sizeof(caset_reg));
 
     HAL_LCD_RASET_REG_t raset_reg = {0};
-    //raset_reg.regs.ROW_START = Ystart;
-    //raset_reg.regs.ROW_END = Yend;
-    raset_reg.data[0] = Ystart >> 8;
-    raset_reg.data[1] = Ystart & 0xFF;
-    raset_reg.data[2] = Yend >> 8;
-    raset_reg.data[3] = Yend & 0xFF;
+    raset_reg.regs.ROW_START = TO_BIG_ENDIAN_16(Ystart);
+    raset_reg.regs.ROW_END = TO_BIG_ENDIAN_16(Yend);
     Hal_LCD_Command_Write_Data(LCD_CMD_ADDR_ROW_ADDR_SET, &raset_reg, sizeof(raset_reg));
 }
 
@@ -423,23 +412,17 @@ parameter	:
         Y	:	Set the Y coordinate
       Color :	Set the color
 ******************************************************************************/
-void Hal_LCD_DrawImage(const void* img, uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend)
+void Hal_LCD_DrawImage(const void* img, uint16_t Xstart, uint16_t Ystart, uint16_t width, uint16_t height)
 {
-    if(Xstart > Xend || Ystart > Yend)
-    {
-        LOG_ERROR("Pixel X/Y start is greater than end index");
-        return; 
-    }
-
     if(img == NULL)
     {
         LOG_ERROR("img pointer null");
         return;
     }
 
-    int img_size = (Xstart - Xend) * (Ystart - Yend) * 2;
+    int img_size = width * height * 2;
 
-    Hal_LCD_SetWindow(Xstart, Ystart, Xend, Yend);
+    Hal_LCD_SetWindow(Xstart, Ystart, Xstart + width - 1, Ystart + height - 1);
     Hal_LCD_Command_Write(LCD_CMD_ADDR_ROW_ADDR_MWR);
     Hal_LCD_Data_Write(img, img_size);
 }
