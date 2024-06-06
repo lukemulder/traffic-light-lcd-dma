@@ -20,11 +20,29 @@ void app_main(void)
 
     while(1)
     {
-        Hal_LCD_DrawImage(traffic_lights_green, 0, 0, TRAFFIC_LIGHTS_GREEN_WIDTH, TRAFFIC_LIGHTS_GREEN_HEIGHT);
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_RED);
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_RED);
+        delay_ms(1000);
+
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_GREEN);
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_GREEN);
         delay_ms(7000);
-        Hal_LCD_DrawImage(traffic_lights_orange, 0, 0, TRAFFIC_LIGHTS_ORANGE_WIDTH, TRAFFIC_LIGHTS_ORANGE_HEIGHT);
+
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_ORANGE);
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_ORANGE);
         delay_ms(3000);
-        Hal_LCD_DrawImage(traffic_lights_red, 0, 0, TRAFFIC_LIGHTS_RED_WIDTH, TRAFFIC_LIGHTS_RED_HEIGHT);
-        delay_ms(7000);
+
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_RED);
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_RED);
+        delay_ms(1000);
+        
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_GREEN);
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_GREEN);
+        delay_ms(4000);
+
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_ORANGE);
+        GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_ORANGE);
+        delay_ms(3000);
+
     }
 }

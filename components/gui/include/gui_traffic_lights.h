@@ -94,6 +94,36 @@ typedef enum {
     LINE_STYLE_DOTTED,
 } LINE_STYLE;
 
+typedef enum {
+    DEGREES_0 = 0,
+    DEGREES_90,
+    DEGREES_180,
+    DEGREES_270
+} ROTATION;
+
+typedef enum {
+    TRAFFIC_LIGHT_TOP = 0,
+    TRAFFIC_LIGHT_BOTTOM,
+    TRAFFIC_LIGHT_LEFT,
+    TRAFFIC_LIGHT_RIGHT
+} TRAFFIC_LIGHT_INDEX;
+
+typedef enum {
+    TRAFFIC_LIGHT_COLOR_OFF = 0,
+    TRAFFIC_LIGHT_COLOR_GREEN,
+    TRAFFIC_LIGHT_COLOR_ORANGE,
+    TRAFFIC_LIGHT_COLOR_RED
+} TRAFFIC_LIGHT_COLOR;
+
+#define TRAFFIC_LIGHT_TOP_X    145
+#define TRAFFIC_LIGHT_TOP_Y    12
+#define TRAFFIC_LIGHT_BOTTOM_X 145
+#define TRAFFIC_LIGHT_BOTTOM_Y 160
+#define TRAFFIC_LIGHT_LEFT_X   220
+#define TRAFFIC_LIGHT_LEFT_Y   104
+#define TRAFFIC_LIGHT_RIGHT_X  32
+#define TRAFFIC_LIGHT_RIGHT_Y  104
+
 /**
  * Whether the graphic is filled
 **/
@@ -113,6 +143,7 @@ void GUI_DrawCircle(uint16_t X_Center, uint16_t Y_Center, uint16_t Radius, uint1
 
 //pic
 void GUI_DrawFrame(uint16_t xStart, uint16_t yStart, uint16_t W_Image, uint16_t H_Image);
+void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX tl_index, TRAFFIC_LIGHT_COLOR tl_color);
 
 void GUI_TrafficLight_Init();
 void GUI_DrawBackground();

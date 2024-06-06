@@ -31,13 +31,12 @@
 #define LOG_LEVEL_ERROR
 
 #include "gui_traffic_lights.h"
+#include "traffic_light_icons.h"
 #include "hal_lcd.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h> //memset()
 #include <math.h>
-
-uint16_t frame_buf[1][1] = {0};
 
 /******************************************************************************
   function: Draw Pixels
@@ -231,6 +230,34 @@ void GUI_DrawCircle(uint16_t X_Center, uint16_t Y_Center, uint16_t Radius,
     }
 }
 
+
+uint16_t** allocate_2d_array(int rows, int cols) {
+    // Allocate a single block for all array elements
+    uint16_t* data = malloc(rows * cols * sizeof(uint16_t));
+    if (data == NULL) {
+        return NULL; // Check for failed memory allocation
+    }
+
+    // Allocate memory for the row pointers
+    uint16_t** row_ptrs = malloc(rows * sizeof(uint16_t*));
+    if (row_ptrs == NULL) {
+        free(data); // Free previously allocated block if this allocation fails
+        return NULL;
+    }
+
+    // Set up the pointers to the rows
+    for (int i = 0; i < rows; i++) {
+        row_ptrs[i] = data + i * cols;
+    }
+
+    return row_ptrs;
+}
+
+void free_2d_array(uint16_t** array) {
+    free(array[0]); // Free the block of all elements
+    free(array);    // Free the array of pointers
+}
+
 /******************************************************************************
   function: Display image
   parameter:
@@ -240,26 +267,139 @@ void GUI_DrawCircle(uint16_t X_Center, uint16_t Y_Center, uint16_t Radius,
     xEnd             ：Image width
     yEnd             : Image height
 ******************************************************************************/
-void GUI_DrawFrame(uint16_t xStart, uint16_t yStart, uint16_t W_Image, uint16_t H_Image)
+void GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W_Image, uint16_t H_Image, ROTATION r)
 {
-  Hal_LCD_DrawImage(frame_buf, xStart, yStart, xStart + W_Image, yStart + H_Image);
+    uint16_t* img_16 = (uint16_t*)img;
+
+    if(r != DEGREES_0)
+    {
+        int i,j,k = 0;
+        uint16_t temp;
+        int total_size = W_Image * H_Image;
+        uint16_t* rotated_img = malloc(sizeof(uint16_t) * W_Image * H_Image);
+
+        if(r == DEGREES_180)
+        {
+            for(i = 0; i < W_Image; i++)
+                for(j = 0; j < H_Image; j++)
+                {
+                    rotated_img[k] = img_16[total_size - 1 - k];
+                    k++;
+                }
+        } 
+        else if (r == DEGREES_90)
+        {
+            for (i = 0; i < W_Image; i++) {
+                for (j = 0; j < H_Image; j++) {
+                    rotated_img[k] = img_16[(H_Image - 1 - j) * W_Image + i];
+                    k++;
+                }
+            }
+            temp = H_Image;
+            H_Image = W_Image;
+            W_Image = temp;
+        } 
+        else if (r == DEGREES_270)
+        {
+            for (i = 0; i < W_Image; i++) {
+                for (j = 0; j < H_Image; j++) {
+                    rotated_img[k] = img_16[j * W_Image + (W_Image - 1 - i)];
+                    k++;
+                }
+            }
+            temp = H_Image;
+            H_Image = W_Image;
+            W_Image = temp;
+        }
+
+        Hal_LCD_DrawImage(rotated_img, xStart, yStart, W_Image, H_Image);
+
+        free(rotated_img);
+    }
+    else
+    {
+        Hal_LCD_DrawImage(img, xStart, yStart, W_Image, H_Image);
+    }
 }
 
-#define TRAFFIC_LIGHT_HEIGHT 66
-#define TRAFFIC_LIGHT_WIDTH  30
+void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX tl_index, TRAFFIC_LIGHT_COLOR tl_color)
+{
+    uint8_t* img;
+    uint16_t xPos,yPos;
+    ROTATION r;
 
-uint16_t tl_frame_buf[TRAFFIC_LIGHT_HEIGHT][TRAFFIC_LIGHT_WIDTH] = {0};
+    switch(tl_color)
+    {
+        case TRAFFIC_LIGHT_COLOR_OFF:
+            img = icon_traffic_lights_off;
+        break;
+
+        case TRAFFIC_LIGHT_COLOR_GREEN:
+            img = icon_traffic_lights_green;
+        break;
+
+        case TRAFFIC_LIGHT_COLOR_ORANGE:
+            img = icon_traffic_lights_orange;
+        break;
+
+        case TRAFFIC_LIGHT_COLOR_RED:
+            img = icon_traffic_lights_red;
+        break;
+
+        default:
+            img = icon_traffic_lights_red;
+        break;
+    }
+
+    switch(tl_index)
+    {
+        case TRAFFIC_LIGHT_TOP:
+            xPos = TRAFFIC_LIGHT_TOP_X;
+            yPos = TRAFFIC_LIGHT_TOP_Y;
+            r = DEGREES_0;
+        break;
+
+        case TRAFFIC_LIGHT_BOTTOM:
+            xPos = TRAFFIC_LIGHT_BOTTOM_X;
+            yPos = TRAFFIC_LIGHT_BOTTOM_Y;
+            r = DEGREES_180;
+        break;
+
+        case TRAFFIC_LIGHT_LEFT:
+            xPos = TRAFFIC_LIGHT_LEFT_X;
+            yPos = TRAFFIC_LIGHT_LEFT_Y;
+            r = DEGREES_90;
+        break;
+
+        case TRAFFIC_LIGHT_RIGHT:
+            xPos = TRAFFIC_LIGHT_RIGHT_X;
+            yPos = TRAFFIC_LIGHT_RIGHT_Y;
+            r = DEGREES_270;
+        break;
+
+        default:
+            xPos = TRAFFIC_LIGHT_TOP_X;
+            yPos = TRAFFIC_LIGHT_TOP_Y;
+            r = DEGREES_0;
+        break;
+    }
+
+    GUI_DrawImage(img, xPos, yPos, TRAFFIC_LIGHTS_WIDTH, TRAFFIC_LIGHTS_HEIGHT, r);
+
+}
 
 void GUI_TrafficLight_Init()
 {
+    GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_GREEN);
+    GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_GREEN);
+    GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_GREEN);
+    GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_GREEN);
+/*
     Hal_LCD_ClearWindow(145, 12, 145 + TRAFFIC_LIGHT_WIDTH, 12 + TRAFFIC_LIGHT_HEIGHT, COLOR_TL_BG);
     Hal_LCD_ClearWindow(145, 160, 145 + TRAFFIC_LIGHT_WIDTH, 160 + TRAFFIC_LIGHT_HEIGHT, COLOR_TL_BG);
     Hal_LCD_ClearWindow(32, 104, 32 + TRAFFIC_LIGHT_HEIGHT, 104 + TRAFFIC_LIGHT_WIDTH, COLOR_TL_BG);
     Hal_LCD_ClearWindow(220, 104, 220 + TRAFFIC_LIGHT_HEIGHT, 104 + TRAFFIC_LIGHT_WIDTH, COLOR_TL_BG);
-
-    GUI_DrawCircle(145 + 16, 12 + 15, 8, COLOR_TL_GRAY, DOT_PIXEL_1X1, DRAW_FILL_FULL);
-    GUI_DrawCircle(145 + 16, 12 + 15 + 19, 8, COLOR_TL_GRAY, DOT_PIXEL_1X1, DRAW_FILL_FULL);
-    GUI_DrawCircle(145 + 16, 12 + 15 + 19 + 19, 8, COLOR_TL_GRAY, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+*/
 }
 
 void GUI_DrawBackground()
