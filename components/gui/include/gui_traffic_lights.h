@@ -1,17 +1,14 @@
-/*****************************************************************************
-* | File        :   GUI_Paint.h
-* | Author      :   Waveshare team
-* | Function    : Achieve drawing: draw points, lines, boxes, circles and
-*                   their size, solid dotted line, solid rectangle hollow
-*                   rectangle, solid circle hollow circle.
+/******************************************************************************
+* | File      	:   gui_traffic_lights.h
+* | Author      :   Luke Mulder
+* | Function    :	Draw a traffic intersection with 4 traffic lights
 * | Info        :
-*   Achieve display characters: Display a single character, string, number
-*   Achieve time display: adaptive size display time minutes and seconds
-*----------------
-* | This version:   V1.0
-* | Date        :   2018-11-15
-* | Info        :    
 *
+*----------------
+* |	This version:   V1.0
+* | Date        :   2024-06-05
+* | Info        :
+* -----------------------------------------------------------------------------
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documnetation files (the "Software"), to deal
 * in the Software without restriction, including without limitation the rights
@@ -54,11 +51,6 @@
 
 #define COLOR_ROAD 0x8C71
 #define COLOR_GRASS 0x44C8
-#define COLOR_TL_BG 0x0000
-#define COLOR_TL_RED 0xE8E5
-#define COLOR_TL_ORANGE 0xFFE0
-#define COLOR_TL_GREEN 0x052A
-#define COLOR_TL_GRAY 0xA534
 
 #define IMAGE_BACKGROUND COLOR_ROAD
 
@@ -94,6 +86,9 @@ typedef enum {
     LINE_STYLE_DOTTED,
 } LINE_STYLE;
 
+/**
+ * Rotation to be applied to an image during rendering
+**/
 typedef enum {
     DEGREES_0 = 0,
     DEGREES_90,
@@ -101,6 +96,9 @@ typedef enum {
     DEGREES_270
 } ROTATION;
 
+/**
+ * Index for selecting each of the traffic lights
+**/
 typedef enum {
     TRAFFIC_LIGHT_TOP = 0,
     TRAFFIC_LIGHT_BOTTOM,
@@ -108,6 +106,9 @@ typedef enum {
     TRAFFIC_LIGHT_RIGHT
 } TRAFFIC_LIGHT_INDEX;
 
+/**
+ * Used to select the indicator to be displayed by a traffic light
+**/
 typedef enum {
     TRAFFIC_LIGHT_COLOR_OFF = 0,
     TRAFFIC_LIGHT_COLOR_GREEN,
@@ -115,6 +116,9 @@ typedef enum {
     TRAFFIC_LIGHT_COLOR_RED
 } TRAFFIC_LIGHT_COLOR;
 
+/**
+ * Starting coordinates of the 4 traffic lights
+**/
 #define TRAFFIC_LIGHT_TOP_X    145
 #define TRAFFIC_LIGHT_TOP_Y    12
 #define TRAFFIC_LIGHT_BOTTOM_X 145
