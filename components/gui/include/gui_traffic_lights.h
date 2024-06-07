@@ -140,7 +140,7 @@ void GUI_Clear(uint16_t Color);
 void GUI_DrawPoint(uint16_t Xpoint, uint16_t Ypoint, uint16_t Color, DOT_PIXEL Dot_Pixel, DOT_STYLE Dot_FillWay);
 void GUI_DrawLine(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend, uint16_t Color, DOT_PIXEL Line_width, LINE_STYLE Line_Style);
 void GUI_DrawRectangle(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend, uint16_t Color, DOT_PIXEL Line_width, DRAW_FILL Filled );
-void GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W_Image, uint16_t H_Image, ROTATION r);
+int GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W_Image, uint16_t H_Image, ROTATION r);
 
 // Traffic Light
 void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX tl_index, TRAFFIC_LIGHT_COLOR tl_color);

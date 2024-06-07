@@ -153,7 +153,7 @@ parameter:
 void GUI_DrawRectangle(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t Yend, 
                           uint16_t color, DOT_PIXEL Line_width, DRAW_FILL Filled )
 {
-    if (Filled ) {
+    if (Filled) {
         uint16_t Ypoint;
         for(Ypoint = Ystart; Ypoint < Yend; Ypoint++) {
             GUI_DrawLine(Xstart, Ypoint, Xend, Ypoint, color ,Line_width, LINE_STYLE_SOLID);
@@ -167,16 +167,26 @@ void GUI_DrawRectangle(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t
 }
 
 /******************************************************************************
-  function: Display image
+  function: GUI_DrawImage
+  description: Draws an image on the LCD display, with optional rotation.
   parameter:
-    image            ：Image start address
-    xStart           : X starting coordinates
-    yStart           : Y starting coordinates
-    xEnd             ：Image width
-    yEnd             : Image height
+    img               : Pointer to the image data
+    xStart            : X coordinate where the image starts
+    yStart            : Y coordinate where the image starts
+    W_Image           : Width of the image
+    H_Image           : Height of the image
+    r                 : Rotation enum specifying the rotation angle (0, 90, 180, 270 degrees)
+  return:
+    int               : Status (-1 if error, 0 if successful)
 ******************************************************************************/
-void GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W_Image, uint16_t H_Image, ROTATION r)
+int GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W_Image, uint16_t H_Image, ROTATION r)
 {
+    if(img == NULL)
+    {
+        LOG_ERROR("Null img passed in");
+        return -1;
+    }
+
     uint16_t* img_16 = (uint16_t*)img;
 
     if(r != DEGREES_0)
@@ -185,6 +195,12 @@ void GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W
         uint16_t temp;
         int total_size = W_Image * H_Image;
         uint16_t* rotated_img = malloc(sizeof(uint16_t) * W_Image * H_Image);
+
+        if(rotated_img == NULL)
+        {
+            LOG_ERROR("Failed to allocate array for rotating image");
+            return -1;
+        }
 
         if(r == DEGREES_180)
         {
@@ -224,12 +240,21 @@ void GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W
 
         free(rotated_img);
     }
-    else
+    else // r == DEGREES_0
     {
         Hal_LCD_DrawImage(img, xStart, yStart, W_Image, H_Image);
     }
+
+    return 0;
 }
 
+/******************************************************************************
+  function: GUI_TrafficLight_Set
+  description: Sets the traffic light image based on the specified index and color.
+  parameter:
+    tl_index          : Index of the traffic light to set (top, bottom, left, right)
+    tl_color          : Color state of the traffic light (off, green, orange, red)
+******************************************************************************/
 void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX tl_index, TRAFFIC_LIGHT_COLOR tl_color)
 {
     const uint8_t* img;
@@ -295,18 +320,35 @@ void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX tl_index, TRAFFIC_LIGHT_COLOR tl_c
     GUI_DrawImage(img, xPos, yPos, TRAFFIC_LIGHTS_WIDTH, TRAFFIC_LIGHTS_HEIGHT, r);
 }
 
+/******************************************************************************
+  function: GUI_TrafficLight_Init
+  description: Initializes all traffic lights to green at their respective positions.
+  parameter:
+    none
+  return:
+    void
+******************************************************************************/
 void GUI_TrafficLight_Init()
 {
+    // Draw the four traffic lights with a default value of green
     GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_GREEN);
     GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_GREEN);
     GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_GREEN);
     GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_GREEN);
 }
 
+/******************************************************************************
+  function: GUI_DrawBackground
+  description: Draws the background for an intersection scenario, including roads and grass areas.
+  parameter:
+    none
+******************************************************************************/
 void GUI_DrawBackground()
 {
+    // Draw the base background for the intersection
     Hal_LCD_Clear(COLOR_ROAD);
 
+    // Draw the lines that border the grass and the road
     Hal_LCD_ClearWindow(107, 0, 107, 75, BLACK);
     Hal_LCD_ClearWindow(213, 0, 213, 75, BLACK);
     Hal_LCD_ClearWindow(107, 160, 107, 240, BLACK);
@@ -317,12 +359,19 @@ void GUI_DrawBackground()
     Hal_LCD_ClearWindow(0, 159, 106, 159, BLACK);
     Hal_LCD_ClearWindow(214, 159, 320, 159, BLACK);
 
+    // Draw the four grass sections that border the intersection
     Hal_LCD_ClearWindow(0, 0, 106, 75, COLOR_GRASS);
     Hal_LCD_ClearWindow(214, 0, 320, 75, COLOR_GRASS);
     Hal_LCD_ClearWindow(0, 160, 106, 240, COLOR_GRASS);
     Hal_LCD_ClearWindow(214, 160, 320, 240, COLOR_GRASS);
 }
 
+/******************************************************************************
+  function: GUI_Init
+  description: Initializes the GUI by drawing the background and setting up initial traffic light configurations.
+  parameter:
+    none
+******************************************************************************/
 void GUI_Init()
 {
     GUI_DrawBackground();
