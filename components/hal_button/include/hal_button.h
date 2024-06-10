@@ -33,9 +33,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
-#define BUTTON_GPIO 26
+#define BUTTON_TOP_BOTTOM_GPIO 26
+#define BUTTON_LEFT_RIGHT_GPIO 25
 
-#define BUTTON_QUEUE_LENGTH 1
+#define BUTTON_ID_TOP_BOTTOM 1
+#define BUTTON_ID_LEFT_RIGHT 2
+
+#define BUTTON_QUEUE_LENGTH 2
 #define BUTTON_QUEUE_ITEM_SIZE sizeof(int)
 
 extern QueueHandle_t button_state_queue;

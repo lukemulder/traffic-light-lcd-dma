@@ -44,15 +44,17 @@ void Traffic_FSM_Update_State()
 
 void state_machine_task(void *params)
 {
-    int receivedState;
+    int receivedButtonID;
 
     while (1)
     {
-        if (xQueueReceive(button_state_queue, &receivedState, portMAX_DELAY) == pdPASS)
+        if (xQueueReceive(button_state_queue, &receivedButtonID, portMAX_DELAY) == pdPASS)
         {
-            // Process state change
-            // Update state machine based on received state
-            printf("Received button press!\n");
+            if (receivedButtonID == BUTTON_ID_TOP_BOTTOM) {
+                printf("Top/bottom button pressed!\n");
+            } else if (receivedButtonID == BUTTON_ID_LEFT_RIGHT) {
+                printf("Left/right button pressed!\n");
+            }
         }
     }
 }

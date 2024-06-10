@@ -35,8 +35,8 @@
 
 QueueHandle_t button_state_queue = NULL;
 
-static void IRAM_ATTR button_isr_handler(void* arg) {
-    int newState = 1;  // Example state change
+static void IRAM_ATTR isr_button_top_bottom(void* arg) {
+    int buttonID = BUTTON_ID_TOP_BOTTOM;  // Example state change
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
     static uint64_t last_interrupt_time = 0;
@@ -44,7 +44,7 @@ static void IRAM_ATTR button_isr_handler(void* arg) {
 
     // Check if interrupts come too close to each other (e.g., within 200 ms)
     if (interrupt_time - last_interrupt_time > 200000) {
-        xQueueSendFromISR(button_state_queue, &newState, &xHigherPriorityTaskWoken);
+        xQueueSendFromISR(button_state_queue, &buttonID, &xHigherPriorityTaskWoken);
     }
     last_interrupt_time = interrupt_time;
 
@@ -54,7 +54,27 @@ static void IRAM_ATTR button_isr_handler(void* arg) {
     }
 }
 
-void Hal_Button_Init() {
+static void IRAM_ATTR isr_button_left_right(void* arg) {
+    int buttonID = BUTTON_ID_LEFT_RIGHT;  // Example state change
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    static uint64_t last_interrupt_time = 0;
+    uint64_t interrupt_time = esp_timer_get_time();  // Get current time in microseconds
+
+    // Check if interrupts come too close to each other (e.g., within 200 ms)
+    if (interrupt_time - last_interrupt_time > 200000) {
+        xQueueSendFromISR(button_state_queue, &buttonID, &xHigherPriorityTaskWoken);
+    }
+    last_interrupt_time = interrupt_time;
+
+    // Now the task can be notified in case it was waiting for this event
+    if (xHigherPriorityTaskWoken) {
+        portYIELD_FROM_ISR();
+    }
+}
+
+void Hal_Button_GPIO_ISR_Init(gpio_num_t gpio_num, gpio_isr_t isr_handler)
+{
     gpio_config_t io_conf;
     // Disable interrupts
     io_conf.intr_type = GPIO_INTR_NEGEDGE;
@@ -64,17 +84,23 @@ void Hal_Button_Init() {
     io_conf.pull_up_en = 1;
     io_conf.pull_down_en = 0;
     // Configure the GPIO pin
-    io_conf.pin_bit_mask = (1ULL << BUTTON_GPIO);
+    io_conf.pin_bit_mask = (1ULL << gpio_num);
     gpio_config(&io_conf);
 
-    // Install GPIO ISR service
-    gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1);  // Choose an appropriate interrupt flag
-
     // Attach the interrupt service routine
-    gpio_isr_handler_add(BUTTON_GPIO, button_isr_handler, NULL);
+    gpio_isr_handler_add(gpio_num, isr_handler, NULL);
+}
+
+void Hal_Button_Init() {
+    // Install GPIO ISR service
+    gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1);
+
+    Hal_Button_GPIO_ISR_Init(BUTTON_TOP_BOTTOM_GPIO, isr_button_top_bottom);
+    Hal_Button_GPIO_ISR_Init(BUTTON_LEFT_RIGHT_GPIO, isr_button_left_right);
 
     // Create a queue to hold int value
     button_state_queue = xQueueCreate(BUTTON_QUEUE_LENGTH, BUTTON_QUEUE_ITEM_SIZE);
+
     if (button_state_queue == NULL) {
         // Handle error: Failed to create the queue
     }
