@@ -12,12 +12,18 @@
 #include "hal_lcd.h"
 #include "traffic_light_icons.h"
 #include "gui_traffic_lights.h"
+#include "traffic_fsm.h"
+#include "hal_button.h"
 
 void app_main(void)
 {
     Hal_LCD_Init();
     GUI_Init();
+    Hal_Button_Init();
+    Traffic_FSM_Task_Init();
 
+    printf("Got past FSM task!\n");
+/*
     while(1)
     {
         GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_RED);
@@ -45,4 +51,5 @@ void app_main(void)
         delay_ms(3000);
 
     }
+    */
 }
