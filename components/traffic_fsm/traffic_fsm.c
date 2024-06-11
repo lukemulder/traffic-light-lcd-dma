@@ -29,37 +29,162 @@
 ******************************************************************************/
 
 #include "traffic_fsm.h"
+#include "traffic_light_icons.h"
+#include "gui_traffic_lights.h"
+#include "esp_timer.h"
 #include "hal_button.h"
 #include "hal_lcd.h"
 
-void Traffic_FSM_Process_State()
-{
+#define TIME_GREEN_WAIT_FOR_RED_SEC  1  * 1000 * 1000
+#define TIME_MAX_ON_ORANGE_SEC       3  * 1000 * 1000
+#define TIME_MAX_ON_GREEN_SEC        30 * 1000 * 1000
+#define TIME_MIN_ON_GREEN_SEC        15 * 1000 * 1000
 
-}
+static TrafficLightState_t tl_state_top_bottom = {0};
+static TrafficLightState_t tl_state_left_right = {0};
 
 void Traffic_FSM_Update_State()
 {
+    uint64_t current_time = esp_timer_get_time();
 
-}
-
-void state_machine_task(void *params)
-{
-    int receivedButtonID;
-
-    while (1)
+    // Top Bottom Traffic Light State
+    switch (tl_state_top_bottom.current_color)
     {
-        if (xQueueReceive(button_state_queue, &receivedButtonID, portMAX_DELAY) == pdPASS)
-        {
-            if (receivedButtonID == BUTTON_ID_TOP_BOTTOM) {
-                printf("Top/bottom button pressed!\n");
-            } else if (receivedButtonID == BUTTON_ID_LEFT_RIGHT) {
-                printf("Left/right button pressed!\n");
+        case TL_RED:
+            if(current_time - tl_state_top_bottom.time_on_color > TIME_MIN_ON_GREEN_SEC &&
+                tl_state_left_right.current_color == TL_RED &&
+               (current_time - tl_state_left_right.time_on_color > TIME_GREEN_WAIT_FOR_RED_SEC))
+            {
+                tl_state_top_bottom.current_color = TL_GREEN;
+                tl_state_top_bottom.time_on_color = current_time;
+
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_GREEN);
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_GREEN);
             }
-        }
+            break;
+        case TL_GREEN:
+            if((current_time - tl_state_top_bottom.time_on_color > TIME_MAX_ON_GREEN_SEC) ||
+                (current_time - tl_state_top_bottom.time_on_color > TIME_MIN_ON_GREEN_SEC &&
+                tl_state_left_right.pedestrianButtonPressed))
+            {
+                tl_state_top_bottom.current_color = TL_ORANGE;
+                tl_state_top_bottom.time_on_color = current_time;
+
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_ORANGE);
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_ORANGE);
+            }
+            break;
+        case TL_ORANGE:
+            if(current_time - tl_state_top_bottom.time_on_color > TIME_MAX_ON_ORANGE_SEC)
+            {
+                tl_state_top_bottom.current_color = TL_RED;
+                tl_state_top_bottom.time_on_color = current_time;
+                tl_state_left_right.pedestrianButtonPressed = 0;
+
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_RED);
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_RED);
+            }
+            break;
+        case TL_OFF:
+            tl_state_top_bottom.current_color = TL_RED;
+            tl_state_top_bottom.time_on_color = current_time;
+            tl_state_left_right.pedestrianButtonPressed = 0;
+
+            GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_RED);
+            GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_RED);
+            break;
+    }
+
+    // Left Right Traffic Light State
+    switch (tl_state_left_right.current_color)
+    {
+        case TL_RED:
+            if(current_time - tl_state_left_right.time_on_color > TIME_MIN_ON_GREEN_SEC &&
+                tl_state_top_bottom.current_color == TL_RED &&
+               (current_time - tl_state_top_bottom.time_on_color > TIME_GREEN_WAIT_FOR_RED_SEC))
+            {
+                tl_state_left_right.current_color = TL_GREEN;
+                tl_state_left_right.time_on_color = current_time;
+
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_GREEN);
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_GREEN);
+            }
+            break;
+        case TL_GREEN:
+            if((current_time - tl_state_left_right.time_on_color > TIME_MAX_ON_GREEN_SEC) ||
+                (current_time - tl_state_left_right.time_on_color > TIME_MIN_ON_GREEN_SEC &&
+                tl_state_top_bottom.pedestrianButtonPressed))
+            {
+                tl_state_left_right.current_color = TL_ORANGE;
+                tl_state_left_right.time_on_color = current_time;
+
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_ORANGE);
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_ORANGE);
+            }
+            break;
+        case TL_ORANGE:
+            if(current_time - tl_state_left_right.time_on_color > TIME_MAX_ON_ORANGE_SEC)
+            {
+                tl_state_left_right.current_color = TL_RED;
+                tl_state_left_right.time_on_color = current_time;
+                tl_state_top_bottom.pedestrianButtonPressed = 0;
+
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_RED);
+                GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_RED);
+            }
+            break;
+        case TL_OFF:
+            tl_state_left_right.current_color = TL_RED;
+            tl_state_left_right.time_on_color = current_time;
+            tl_state_top_bottom.pedestrianButtonPressed = 0;
+
+            GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_RED);
+            GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_RED);
+            break;
     }
 }
 
-void Traffic_FSM_Task_Init()
+void traffic_fsm_task(void *params)
 {
-    xTaskCreate(state_machine_task, "State Machine Task", 2048, NULL, 10, NULL);
+    int receivedButtonID;
+
+    for(;;)
+    {
+        if (xQueueReceive(button_state_queue, &receivedButtonID, 0) == pdPASS)
+        {
+            if (receivedButtonID == BUTTON_ID_TOP_BOTTOM) {
+                tl_state_top_bottom.pedestrianButtonPressed = 1;
+                printf("Top/bottom button pressed!\n");
+            } else if (receivedButtonID == BUTTON_ID_LEFT_RIGHT) {
+                tl_state_left_right.pedestrianButtonPressed = 1;
+                printf("Left/right button pressed!\n");
+            }
+        }
+
+        Traffic_FSM_Update_State();
+
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+}
+
+void Traffic_FSM_Task_Begin()
+{
+    GUI_Init();
+
+    // Place traffic lights in known state
+    GUI_TrafficLight_Set(TRAFFIC_LIGHT_TOP, TRAFFIC_LIGHT_COLOR_GREEN);
+    GUI_TrafficLight_Set(TRAFFIC_LIGHT_BOTTOM, TRAFFIC_LIGHT_COLOR_GREEN);
+
+    GUI_TrafficLight_Set(TRAFFIC_LIGHT_LEFT, TRAFFIC_LIGHT_COLOR_RED);
+    GUI_TrafficLight_Set(TRAFFIC_LIGHT_RIGHT, TRAFFIC_LIGHT_COLOR_RED);
+
+    uint64_t current_time = esp_timer_get_time();
+    tl_state_top_bottom.time_on_color = current_time;
+    tl_state_left_right.time_on_color = current_time;
+
+    tl_state_top_bottom.current_color = TL_GREEN;
+    tl_state_left_right.current_color = TL_RED;
+
+    // Create task to handle state machine
+    xTaskCreate(traffic_fsm_task, "Traffic Light SM Task", 2048, NULL, 10, NULL);
 }

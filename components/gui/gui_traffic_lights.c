@@ -255,7 +255,7 @@ int GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W_
     tl_index          : Index of the traffic light to set (top, bottom, left, right)
     tl_color          : Color state of the traffic light (off, green, orange, red)
 ******************************************************************************/
-void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX tl_index, TRAFFIC_LIGHT_COLOR tl_color)
+void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX_e tl_index, TRAFFIC_LIGHT_COLOR_e tl_color)
 {
     const uint8_t* img;
     uint16_t xPos,yPos;

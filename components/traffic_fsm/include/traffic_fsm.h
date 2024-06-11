@@ -30,6 +30,21 @@
 #ifndef TRAFFIC_FSM_H
 #define TRAFFIC_FSM_H
 
-void Traffic_FSM_Task_Init();
+#include <stdint.h>
+
+typedef enum {
+    TL_OFF = 0,
+    TL_GREEN,
+    TL_ORANGE,
+    TL_RED
+} TrafficLightColor_e;
+
+typedef struct {
+    uint64_t time_on_color;
+    TrafficLightColor_e current_color;
+    uint8_t pedestrianButtonPressed;
+} TrafficLightState_t;
+
+void Traffic_FSM_Task_Begin();
 
 #endif // TRAFFIC_FSM_H

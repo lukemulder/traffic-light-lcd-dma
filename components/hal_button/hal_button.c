@@ -42,7 +42,7 @@ static void IRAM_ATTR isr_button_top_bottom(void* arg) {
     static uint64_t last_interrupt_time = 0;
     uint64_t interrupt_time = esp_timer_get_time();  // Get current time in microseconds
 
-    // Check if interrupts come too close to each other (e.g., within 200 ms)
+    // Debounce with 200ms
     if (interrupt_time - last_interrupt_time > 200000) {
         xQueueSendFromISR(button_state_queue, &buttonID, &xHigherPriorityTaskWoken);
     }
@@ -61,7 +61,7 @@ static void IRAM_ATTR isr_button_left_right(void* arg) {
     static uint64_t last_interrupt_time = 0;
     uint64_t interrupt_time = esp_timer_get_time();  // Get current time in microseconds
 
-    // Check if interrupts come too close to each other (e.g., within 200 ms)
+    // Debounce with 200ms
     if (interrupt_time - last_interrupt_time > 200000) {
         xQueueSendFromISR(button_state_queue, &buttonID, &xHigherPriorityTaskWoken);
     }

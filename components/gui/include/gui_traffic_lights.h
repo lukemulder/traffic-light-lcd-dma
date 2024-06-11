@@ -104,7 +104,7 @@ typedef enum {
     TRAFFIC_LIGHT_BOTTOM,
     TRAFFIC_LIGHT_LEFT,
     TRAFFIC_LIGHT_RIGHT
-} TRAFFIC_LIGHT_INDEX;
+} TRAFFIC_LIGHT_INDEX_e;
 
 /**
  * Used to select the indicator to be displayed by a traffic light
@@ -114,7 +114,7 @@ typedef enum {
     TRAFFIC_LIGHT_COLOR_GREEN,
     TRAFFIC_LIGHT_COLOR_ORANGE,
     TRAFFIC_LIGHT_COLOR_RED
-} TRAFFIC_LIGHT_COLOR;
+} TRAFFIC_LIGHT_COLOR_e;
 
 /**
  * Starting coordinates of the 4 traffic lights
@@ -147,7 +147,7 @@ void GUI_DrawRectangle(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t
 int GUI_DrawImage(const void* img, uint16_t xStart, uint16_t yStart, uint16_t W_Image, uint16_t H_Image, ROTATION r);
 
 // Traffic Light
-void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX tl_index, TRAFFIC_LIGHT_COLOR tl_color);
+void GUI_TrafficLight_Set(TRAFFIC_LIGHT_INDEX_e tl_index, TRAFFIC_LIGHT_COLOR_e tl_color);
 
 void GUI_TrafficLight_Init();
 void GUI_DrawBackground();
