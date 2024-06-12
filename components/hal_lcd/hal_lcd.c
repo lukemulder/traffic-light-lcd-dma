@@ -29,7 +29,6 @@
 ******************************************************************************/
 
 #define LOG_LEVEL_ERROR
-
 #include "logging.h"
 
 #include "hal_lcd.h"

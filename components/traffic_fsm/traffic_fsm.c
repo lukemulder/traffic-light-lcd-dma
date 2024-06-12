@@ -28,6 +28,9 @@
 #
 ******************************************************************************/
 
+#define LOG_LEVEL_WARNING
+#include "logging.h"
+
 #include "traffic_fsm.h"
 #include "traffic_light_icons.h"
 #include "gui_traffic_lights.h"
@@ -42,6 +45,14 @@
 
 static TrafficLightState_t tl_state_top_bottom = {0};
 static TrafficLightState_t tl_state_left_right = {0};
+
+static uint64_t stack_check_time = 0;
+
+#define TRAFFIC_LIGHT_TASK_STACK_DEPTH 3072
+#define TRAFFIC_LIGHT_TASK_PRIORITY 10
+
+#define TRAFFIC_LIGHT_TASK_STACK_CHECK_INTERVAL 10 * 1000 * 1000
+#define TRAFFIC_LIGHT_STACK_SPACE_WARNING_BYTES 512
 
 void Traffic_FSM_Update_State()
 {
@@ -144,24 +155,45 @@ void Traffic_FSM_Update_State()
     }
 }
 
-void traffic_fsm_task(void *params)
+void Traffic_FSM_Check_Button_Press()
 {
     int receivedButtonID;
 
-    for(;;)
+    if (xQueueReceive(button_state_queue, &receivedButtonID, 0) == pdPASS)
     {
-        if (xQueueReceive(button_state_queue, &receivedButtonID, 0) == pdPASS)
+        if (receivedButtonID == BUTTON_ID_TOP_BOTTOM) {
+            tl_state_top_bottom.pedestrianButtonPressed = 1;
+            printf("Top/bottom button pressed!\n");
+        } else if (receivedButtonID == BUTTON_ID_LEFT_RIGHT) {
+            tl_state_left_right.pedestrianButtonPressed = 1;
+            printf("Left/right button pressed!\n");
+        }
+    }
+}
+
+void Traffic_FSM_Monitor_Stack_Usage()
+{
+    // Evaluate the stack size and log warning if low
+    if(esp_timer_get_time() - stack_check_time > TRAFFIC_LIGHT_TASK_STACK_CHECK_INTERVAL)
+    {
+        UBaseType_t min_stack_space = uxTaskGetStackHighWaterMark(NULL);
+
+        if(min_stack_space < TRAFFIC_LIGHT_STACK_SPACE_WARNING_BYTES)
         {
-            if (receivedButtonID == BUTTON_ID_TOP_BOTTOM) {
-                tl_state_top_bottom.pedestrianButtonPressed = 1;
-                printf("Top/bottom button pressed!\n");
-            } else if (receivedButtonID == BUTTON_ID_LEFT_RIGHT) {
-                tl_state_left_right.pedestrianButtonPressed = 1;
-                printf("Left/right button pressed!\n");
-            }
+            LOG_WARNING("Traffic light task stack space running low: %ibytes", min_stack_space);
         }
 
+        stack_check_time = esp_timer_get_time();
+    }
+}
+
+void traffic_fsm_task(void *params)
+{
+    for(;;)
+    {
+        Traffic_FSM_Check_Button_Press();
         Traffic_FSM_Update_State();
+        Traffic_FSM_Monitor_Stack_Usage();
 
         vTaskDelay(pdMS_TO_TICKS(50));
     }
@@ -186,5 +218,16 @@ void Traffic_FSM_Task_Begin()
     tl_state_left_right.current_color = TL_RED;
 
     // Create task to handle state machine
-    xTaskCreate(traffic_fsm_task, "Traffic Light SM Task", 2048, NULL, 10, NULL);
+    TaskHandle_t taskHandle = NULL;
+    BaseType_t result = xTaskCreate(traffic_fsm_task,
+                                    "Traffic Light SM Task", 
+                                    TRAFFIC_LIGHT_TASK_STACK_DEPTH, 
+                                    NULL, 
+                                    TRAFFIC_LIGHT_TASK_PRIORITY, 
+                                    &taskHandle);
+
+    if (result != pdPASS || taskHandle == NULL)
+    {
+        LOG_ERROR("Failed to create Traffic Light State Machine task!\n");
+    }
 }
