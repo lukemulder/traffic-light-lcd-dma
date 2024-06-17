@@ -34,46 +34,28 @@
 #include <stdint.h>
 
 QueueHandle_t button_state_queue = NULL;
+static int buttonIDs[] = {BUTTON_ID_TOP_BOTTOM, BUTTON_ID_LEFT_RIGHT};
 
-static void IRAM_ATTR isr_button_top_bottom(void* arg) {
-    int buttonID = BUTTON_ID_TOP_BOTTOM;  // Example state change
+static void IRAM_ATTR isr_button_handler(void* arg) {
+    int buttonID = *(int*)arg;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    static uint64_t last_interrupt_time = 0;
-    uint64_t interrupt_time = esp_timer_get_time();  // Get current time in microseconds
+    static uint64_t last_interrupt_time[TOTAL_BUTTONS] = {0};
+    uint64_t interrupt_time = esp_timer_get_time();
 
     // Debounce with 200ms
-    if (interrupt_time - last_interrupt_time > 200000) {
+    if (interrupt_time - last_interrupt_time[buttonID] > 200000) {
         xQueueSendFromISR(button_state_queue, &buttonID, &xHigherPriorityTaskWoken);
+        last_interrupt_time[buttonID] = interrupt_time;
     }
-    last_interrupt_time = interrupt_time;
 
-    // Now the task can be notified in case it was waiting for this event
+    // Yield if a higher priority task was woken
     if (xHigherPriorityTaskWoken) {
         portYIELD_FROM_ISR();
     }
 }
 
-static void IRAM_ATTR isr_button_left_right(void* arg) {
-    int buttonID = BUTTON_ID_LEFT_RIGHT;  // Example state change
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-    static uint64_t last_interrupt_time = 0;
-    uint64_t interrupt_time = esp_timer_get_time();  // Get current time in microseconds
-
-    // Debounce with 200ms
-    if (interrupt_time - last_interrupt_time > 200000) {
-        xQueueSendFromISR(button_state_queue, &buttonID, &xHigherPriorityTaskWoken);
-    }
-    last_interrupt_time = interrupt_time;
-
-    // Now the task can be notified in case it was waiting for this event
-    if (xHigherPriorityTaskWoken) {
-        portYIELD_FROM_ISR();
-    }
-}
-
-void Hal_Button_GPIO_ISR_Init(gpio_num_t gpio_num, gpio_isr_t isr_handler)
+void Hal_Button_GPIO_ISR_Init(gpio_num_t gpio_num, gpio_isr_t isr_handler, void* arg)
 {
     gpio_config_t io_conf;
     // Disable interrupts
@@ -88,17 +70,18 @@ void Hal_Button_GPIO_ISR_Init(gpio_num_t gpio_num, gpio_isr_t isr_handler)
     gpio_config(&io_conf);
 
     // Attach the interrupt service routine
-    gpio_isr_handler_add(gpio_num, isr_handler, NULL);
+    gpio_isr_handler_add(gpio_num, isr_handler, arg);
 }
 
 void Hal_Button_Init() {
     // Install GPIO ISR service
     gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1);
 
-    Hal_Button_GPIO_ISR_Init(BUTTON_TOP_BOTTOM_GPIO, isr_button_top_bottom);
-    Hal_Button_GPIO_ISR_Init(BUTTON_LEFT_RIGHT_GPIO, isr_button_left_right);
+    // Initialize ISRs for each button
+    Hal_Button_GPIO_ISR_Init(BUTTON_TOP_BOTTOM_GPIO, isr_button_handler, &buttonIDs[0]);
+    Hal_Button_GPIO_ISR_Init(BUTTON_LEFT_RIGHT_GPIO, isr_button_handler, &buttonIDs[1]);
 
-    // Create a queue to hold int value
+    // Create a queue to hold button states
     button_state_queue = xQueueCreate(BUTTON_QUEUE_LENGTH, BUTTON_QUEUE_ITEM_SIZE);
 
     if (button_state_queue == NULL) {
