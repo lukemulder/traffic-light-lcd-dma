@@ -96,7 +96,7 @@ void logging(const char *file, int line, const char *func, LogLevel_e level, con
     #define LOG_WARNING(log_str, ...)
   #endif
 
-  #if LOG_INFO >= LOG_LEVEL_SETTING_INFO
+  #if LOG_LEVEL >= LOG_LEVEL_SETTING_INFO
     #define LOG_INFO(log_str, ...) logging(__FILE__, __LINE__, __func__, INFO, log_str, ##__VA_ARGS__)
   #else
     #define LOG_INFO(log_str, ...)
